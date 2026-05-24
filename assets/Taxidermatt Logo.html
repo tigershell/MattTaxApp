@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>TAXIDERMATT — Logo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --phosphor: #00FF41;
+    --phosphor-dim: #00FF4133;
+    --black: #000000;
+  }
+  html, body { margin: 0; padding: 0; background: #0a0a0a; }
+  body { font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace; color: #aaa; }
+
+  /* Blink cursor (terminal style: hard on/off, ~530ms period like VT) */
+  @keyframes blink {
+    0%, 49%   { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+  .cursor {
+    display: inline-block;
+    background: var(--phosphor);
+    color: var(--phosphor);
+    width: 0.6em;
+    height: 1em;
+    margin-left: 0.08em;
+    vertical-align: -0.12em;
+    animation: blink 1.06s steps(1, end) infinite;
+  }
+
+  .logo {
+    font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    font-weight: 600;
+    color: var(--phosphor);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    line-height: 1;
+    font-feature-settings: "ss01", "ss02";
+  }
+
+  .stage {
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+  }
+  .stage.tl { justify-content: flex-start; align-items: flex-start; padding: 32px; }
+  .stage.tight { padding: 0; }
+
+  .scanlines::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,255,65,0.04) 2px,
+      rgba(0,255,65,0.04) 3px
+    );
+    pointer-events: none;
+  }
+
+  /* Tile bg */
+  .tile { position: relative; overflow: hidden; }
+
+  /* Favicon-ish */
+  .mono-block {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--phosphor); color: #000;
+    font-weight: 700; font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0;
+  }
+
+  .prompt {
+    color: #888;
+  }
+  .prompt-arrow { color: var(--phosphor); }
+
+  /* Small terminal window mock for context */
+  .term {
+    background: #000; color: var(--phosphor);
+    padding: 16px 20px;
+    border: 1px solid #1a1a1a;
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px; line-height: 1.6;
+  }
+  .term .bar {
+    display: flex; gap: 6px; margin: -16px -20px 14px; padding: 10px 14px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .term .bar i { width: 10px; height: 10px; border-radius: 50%; background:#222; display:inline-block; }
+  .term .out { color: #6b9c7a; }
+  .term .ok { color: var(--phosphor); }
+  .term .muted { color: #4a6a55; }
+
+  /* Macro letterforms detail */
+  .macro {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--phosphor);
+    font-size: 220px;
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+
+  /* Grid spec */
+  .spec {
+    color: #6e6e6e; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .spec b { color: var(--phosphor); font-weight: 500; }
+
+  .swatch-row { display: flex; gap: 12px; align-items: stretch; height: 100%; padding: 24px; box-sizing: border-box; }
+  .swatch { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 16px; border: 1px solid #1a1a1a; }
+  .swatch .name { color: #fff; font-size: 12px; letter-spacing: 0.1em; }
+  .swatch .hex { color: #6e6e6e; font-size: 11px; letter-spacing: 0.08em; }
+
+  /* Favicon strip */
+  .fav-row { display: flex; gap: 24px; align-items: center; justify-content: center; height: 100%; }
+  .fav { background: #000; display: inline-flex; align-items: center; justify-content: center; color: var(--phosphor); font-family: 'IBM Plex Mono', monospace; font-weight: 700; }
+  .fav .c { background: var(--phosphor); display: inline-block; }
+
+  /* Size demo */
+  .size-row { display: flex; flex-direction: column; gap: 28px; padding: 32px; }
+  .size-row .row { display: flex; align-items: baseline; gap: 24px; }
+  .size-row .row .label { color: #555; font-size: 10px; letter-spacing: 0.1em; width: 80px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+function Logo({ size = 96, weight = 600, letter = "0.02em", word = "TAXIDERMATT", cursor = true, cursorChar = "block" }) {
+  const style = {
+    fontSize: size,
+    fontWeight: weight,
+    letterSpacing: letter,
+  };
+  return (
+    <span className="logo" style={style}>
+      {word}
+      {cursor && cursorChar === "block" && <span className="cursor" />}
+      {cursor && cursorChar === "underscore" && <span className="cursor" style={{height: "0.15em", verticalAlign: "0", marginLeft: "0.12em"}} />}
+      {cursor && cursorChar === "bar" && <span className="cursor" style={{width: "0.1em"}} />}
+    </span>
+  );
+}
+
+/* ---------- ARTBOARDS ---------- */
+
+function PrimaryMark() {
+  return (
+    <div className="stage tile">
+      <Logo size={48} />
+    </div>
+  );
+}
+
+function PrimaryLarge() {
+  return (
+    <div className="stage tile">
+      <Logo size={64} />
+    </div>
+  );
+}
+
+function WithPrompt() {
+  return (
+    <div className="stage tile" style={{justifyContent:"flex-start", paddingLeft: 40}}>
+      <span className="logo" style={{fontSize: 26, fontWeight: 600}}>
+        <span className="prompt">~/finances </span>
+        <span className="prompt-arrow">$ </span>
+        TAXIDERMATT
+        <span className="cursor" />
+      </span>
+    </div>
+  );
+}
+
+function SizeStack() {
+  return (
+    <div className="stage tile" style={{alignItems:"stretch", justifyContent:"stretch"}}>
+      <div className="size-row" style={{width: "100%"}}>
+        <div className="row"><span className="label">56 PX</span><Logo size={56} /></div>
+        <div className="row"><span className="label">36 PX</span><Logo size={36} /></div>
+        <div className="row"><span className="label">22 PX</span><Logo size={22} /></div>
+        <div className="row"><span className="label">14 PX</span><Logo size={14} /></div>
+      </div>
+    </div>
+  );
+}
+
+function CursorVariants() {
+  return (
+    <div className="stage tile" style={{flexDirection:"column", gap: 36}}>
+      <div style={{display:"flex", alignItems:"center", gap: 28}}>
+        <span className="spec" style={{width: 110}}>Block</span>
+        <Logo size={56} cursorChar="block" />
+      </div>
+      <div style={{display:"flex", alignItems:"center", gap: 28}}>
+        <span className="spec" style={{width: 110}}>Underscore</span>
+        <Logo size={56} cursorChar="underscore" />
+      </div>
+      <div style={{display:"flex", alignItems:"center", gap: 28}}>
+        <span className="spec" style={{width: 110}}>Bar</span>
+        <Logo size={56} cursorChar="bar" />
+      </div>
+    </div>
+  );
+}
+
+function FaviconRow() {
+  return (
+    <div className="stage tile">
+      <div className="fav-row">
+        <div className="fav" style={{width: 128, height: 128, fontSize: 56}}>
+          T<span className="c" style={{width: 28, height: 56, marginLeft: 4}}/>
+        </div>
+        <div className="fav" style={{width: 80, height: 80, fontSize: 36}}>
+          T<span className="c" style={{width: 18, height: 36, marginLeft: 3}}/>
+        </div>
+        <div className="fav" style={{width: 48, height: 48, fontSize: 22}}>
+          T<span className="c" style={{width: 11, height: 22, marginLeft: 2}}/>
+        </div>
+        <div className="fav" style={{width: 32, height: 32, fontSize: 15}}>
+          T<span className="c" style={{width: 7, height: 15, marginLeft: 1}}/>
+        </div>
+        <div className="fav" style={{width: 16, height: 16, fontSize: 8}}>
+          T<span className="c" style={{width: 4, height: 8, marginLeft: 1}}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MacroDetail() {
+  return (
+    <div className="stage tile" style={{justifyContent:"flex-start", alignItems:"center", paddingLeft: 40, overflow:"hidden"}}>
+      <span className="macro" style={{fontSize: 140}}>TAX<span className="cursor" style={{width:"0.55em", height:"0.92em"}}/></span>
+    </div>
+  );
+}
+
+function TerminalContext() {
+  return (
+    <div className="stage tile" style={{padding: 40, alignItems:"stretch", justifyContent:"stretch"}}>
+      <div className="term" style={{width: "100%", boxSizing:"border-box"}}>
+        <div className="bar"><i/><i/><i/></div>
+        <div><span className="muted">matt@dev</span> <span className="muted">~/2026</span> <span style={{color:"var(--phosphor)"}}>$</span> taxidermatt status</div>
+        <div className="out" style={{marginTop: 6}}>  q1 estimated tax ............. <span className="ok">paid</span></div>
+        <div className="out">  1099-NEC / Acme LLC .......... <span className="ok">filed</span></div>
+        <div className="out">  schedule C deductions ........ <span style={{color:"#d4c75a"}}>14 pending</span></div>
+        <div className="out">  mileage log .................. <span className="ok">synced</span></div>
+        <div style={{marginTop: 14}}><span className="muted">matt@dev</span> <span className="muted">~/2026</span> <span style={{color:"var(--phosphor)"}}>$</span> <Logo size={14} cursor={true} /></div>
+      </div>
+    </div>
+  );
+}
+
+function SpecSheet() {
+  return (
+    <div className="stage tile" style={{alignItems:"stretch", justifyContent:"stretch"}}>
+      <div style={{padding: 28, display:"grid", gridTemplateColumns:"1fr 1fr", gap: 14, width:"100%", boxSizing:"border-box", alignContent:"start"}}>
+        <div className="spec">Wordmark</div><div className="spec"><b>TAXIDERMATT</b></div>
+        <div className="spec">Typeface</div><div className="spec"><b>IBM Plex Mono · 600</b></div>
+        <div className="spec">Case</div><div className="spec"><b>All caps</b></div>
+        <div className="spec">Tracking</div><div className="spec"><b>+20 / 1000 em</b></div>
+        <div className="spec">Foreground</div><div className="spec"><b>#00FF41</b></div>
+        <div className="spec">Background</div><div className="spec"><b>#000000</b></div>
+        <div className="spec">Cursor</div><div className="spec"><b>0.6 × 1.0 em block</b></div>
+        <div className="spec">Cursor blink</div><div className="spec"><b>1.06s · 50/50 · steps(1)</b></div>
+        <div className="spec">Clear space</div><div className="spec"><b>1 cap-height all sides</b></div>
+        <div className="spec">Min size (screen)</div><div className="spec"><b>11 px cap-height</b></div>
+      </div>
+    </div>
+  );
+}
+
+function Palette() {
+  return (
+    <div className="stage tile" style={{alignItems:"stretch", justifyContent:"stretch"}}>
+      <div className="swatch-row">
+        <div className="swatch" style={{background:"#00FF41", color:"#000"}}>
+          <div style={{fontFamily:"'IBM Plex Mono',monospace", fontSize: 11, letterSpacing:"0.08em"}}>PHOSPHOR</div>
+          <div style={{fontFamily:"'IBM Plex Mono',monospace", fontSize: 11, letterSpacing:"0.08em", color:"#003311"}}>#00FF41</div>
+        </div>
+        <div className="swatch" style={{background:"#000", color:"#fff"}}>
+          <div className="name">VOID</div>
+          <div className="hex">#000000</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ScanlineHero() {
+  return (
+    <div className="stage tile scanlines" style={{position:"relative"}}>
+      <Logo size={48} />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <DesignCanvas title="TAXIDERMATT — Logo" subtitle="Wordmark + blinking block cursor · #00FF41 on #000000">
+      <DCSection id="primary" title="Primary mark">
+        <DCArtboard id="lockup" label="Primary lockup" width={720} height={240}>
+          <PrimaryLarge />
+        </DCArtboard>
+        <DCArtboard id="standard" label="Standard" width={560} height={200}>
+          <PrimaryMark />
+        </DCArtboard>
+        <DCArtboard id="scan" label="On phosphor CRT" width={560} height={200}>
+          <ScanlineHero />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="usage" title="In context">
+        <DCArtboard id="prompt" label="As a shell command" width={720} height={140}>
+          <WithPrompt />
+        </DCArtboard>
+        <DCArtboard id="terminal" label="Inside the app shell" width={620} height={320}>
+          <TerminalContext />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="scales" title="Scale & icon">
+        <DCArtboard id="sizes" label="Size ladder" width={620} height={340}>
+          <SizeStack />
+        </DCArtboard>
+        <DCArtboard id="favicon" label="App icon · favicon" width={620} height={220}>
+          <FaviconRow />
+        </DCArtboard>
+        <DCArtboard id="macro" label="Letterform detail" width={620} height={220}>
+          <MacroDetail />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="system" title="System">
+        <DCArtboard id="cursors" label="Cursor variants" width={500} height={320}>
+          <CursorVariants />
+        </DCArtboard>
+        <DCArtboard id="palette" label="Palette" width={420} height={260}>
+          <Palette />
+        </DCArtboard>
+        <DCArtboard id="spec" label="Spec sheet" width={620} height={380}>
+          <SpecSheet />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

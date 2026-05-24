@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>TAXIDERMATT — Icon Logo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --phosphor: #00FF41;
+    --black: #000000;
+  }
+  html, body { margin: 0; padding: 0; background: #0a0a0a; }
+  body { font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace; color: #aaa; }
+
+  .stage {
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+  }
+  .tile { position: relative; overflow: hidden; }
+
+  .wordmark {
+    font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    font-weight: 600;
+    color: var(--phosphor);
+    letter-spacing: 0.22em;
+    /* compensate the trailing tracking so the word stays optically centered */
+    padding-left: 0.22em;
+    text-align: center;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .lockup {
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+  }
+
+  .spec { color: #6e6e6e; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .spec b { color: var(--phosphor); font-weight: 500; }
+
+  .swatch-row { display: flex; gap: 12px; align-items: stretch; height: 100%; padding: 24px; box-sizing: border-box; }
+  .swatch { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 16px; border: 1px solid #1a1a1a; }
+  .swatch .name { color: #fff; font-size: 12px; letter-spacing: 0.1em; }
+  .swatch .hex { color: #6e6e6e; font-size: 11px; letter-spacing: 0.08em; }
+
+  /* Receipt blink: subtle pulse on the receipt outline so the icon feels alive
+     but doesn't compete with a real terminal cursor blink */
+  @keyframes receiptpulse {
+    0%, 92%, 100% { opacity: 1; }
+    94%, 98%      { opacity: 0.55; }
+  }
+  .pulse { animation: receiptpulse 4.6s infinite; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+const { useState } = React;
+
+/* ────────────────────────────────────────────────────────────
+   ICONS
+   All icons share viewBox -100 -130 200 280 (200 × 280) so they
+   can be swapped in any lockup without resizing.
+   Stroke-only line art, single colour, no fills except eyes/nose.
+   ──────────────────────────────────────────────────────────── */
+
+/* ViewBox: 240 wide × 340 tall.
+   - Antlers/horns occupy y ≈ 10–110
+   - Head occupies y ≈ 110–210 (centered x=120, width ~ 110)
+   - Receipt occupies y ≈ 210–330, hanging from mouth */
+const ICON_PROPS = {
+  viewBox: "0 0 240 340",
+  fill: "none",
+  stroke: "var(--phosphor)",
+  strokeWidth: 7,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+};
+
+/* Shared receipt component — hangs from mouth at y=top, runs to y=bottom
+   with a 4-tooth torn edge. Designed to read as a receipt even at 16px. */
+function Receipt({ top = 210, bottom = 322, width = 78, lines = 5 }) {
+  const cx = 120;
+  const x0 = cx - width/2;
+  const x1 = cx + width/2;
+  // 5-tooth zigzag for a wider receipt
+  const teethCount = 5;
+  const teeth = [];
+  for (let i = 0; i <= teethCount; i++) {
+    const t = i / teethCount;
+    const x = x0 + width * t;
+    const y = (i % 2 === 0) ? (bottom - 2) : (bottom - 16);
+    teeth.push(`L ${x} ${y}`);
+  }
+  const path = `M ${x0} ${top} L ${x0} ${bottom - 2} ${teeth.join(' ')} L ${x1} ${top} Z`;
+  const rows = [];
+  // Place text-lines evenly along the body
+  const bodyTop = top + 16;
+  const bodyBot = bottom - 24;
+  for (let i = 0; i < lines; i++) {
+    const t = lines === 1 ? 0.5 : i / (lines - 1);
+    const y = bodyTop + (bodyBot - bodyTop) * t;
+    // Vary widths so it reads as receipt text, not a barcode
+    const widths = [width - 20, width - 30, width - 14, width - 36, width - 22];
+    const w = widths[i % widths.length];
+    rows.push(<line key={i} x1={cx - w/2} y1={y} x2={cx + w/2} y2={y} strokeWidth="4" />);
+  }
+  return (
+    <g className="pulse">
+      <path d={path} />
+      {rows}
+    </g>
+  );
+}
+
+/* Shared head: rounded shield/mount shape, centered at x=120
+   y range 110 → 210. Used by deer & stag; ram has a wider variant. */
+const HEAD_DEER = "M 70 122 L 70 178 Q 70 200 92 208 L 120 218 L 148 208 Q 170 200 170 178 L 170 122 Q 170 110 158 110 L 82 110 Q 70 110 70 122 Z";
+const HEAD_RAM  = "M 64 124 L 64 178 Q 64 200 90 208 L 120 220 L 150 208 Q 176 200 176 178 L 176 124 Q 176 112 164 112 L 76 112 Q 64 112 64 124 Z";
+
+/* Eyes & nose detail (positions tuned for each head) */
+function DeerFace() {
+  return (
+    <g>
+      {/* Eyes */}
+      <rect x="88"  y="146" width="14" height="10" rx="1" fill="var(--phosphor)" stroke="none" />
+      <rect x="138" y="146" width="14" height="10" rx="1" fill="var(--phosphor)" stroke="none" />
+      {/* Nose dot above where receipt comes out */}
+      <rect x="113" y="192" width="14" height="6"  rx="1" fill="var(--phosphor)" stroke="none" />
+    </g>
+  );
+}
+function RamFace() {
+  return (
+    <g>
+      {/* Horizontal slit eyes — distinctive to sheep/ram */}
+      <rect x="84"  y="150" width="20" height="6" rx="1" fill="var(--phosphor)" stroke="none" />
+      <rect x="136" y="150" width="20" height="6" rx="1" fill="var(--phosphor)" stroke="none" />
+      <rect x="113" y="194" width="14" height="6" rx="1" fill="var(--phosphor)" stroke="none" />
+    </g>
+  );
+}
+
+/* DEER — wide-spread fork antlers */
+function IconDeer(props) {
+  return (
+    <svg {...ICON_PROPS} {...props}>
+      {/* Left antler: main stem + 2 branches */}
+      <path d="M 90 112  L 70 60  L 56 18" />
+      <path d="M 70 60   L 36 42" />
+      <path d="M 70 60   L 86 28" />
+      {/* Right antler: mirror */}
+      <path d="M 150 112 L 170 60 L 184 18" />
+      <path d="M 170 60  L 204 42" />
+      <path d="M 170 60  L 154 28" />
+      {/* Head */}
+      <path d={HEAD_DEER} />
+      <DeerFace />
+      {/* Receipt */}
+      <Receipt />
+    </svg>
+  );
+}
+
+/* RAM — curled horn arcs that emerge from the temples and curl forward-down */
+function IconRam(props) {
+  return (
+    <svg {...ICON_PROPS} {...props}>
+      {/* Head first so horns can overlap it cleanly at the attachment */}
+      <path d={HEAD_RAM} />
+      {/* Left curled horn: attaches at temple (78,124), arcs UP and OUT,
+         then sweeps back DOWN and IN to curl forward */}
+      <path d="
+        M 78 124
+        C 56 110, 26 124, 22 154
+        C 18 184, 50 200, 70 184
+        C 82 174, 80 158, 70 156
+      " />
+      {/* Right curled horn — mirror */}
+      <path d="
+        M 162 124
+        C 184 110, 214 124, 218 154
+        C 222 184, 190 200, 170 184
+        C 158 174, 160 158, 170 156
+      " />
+      <RamFace />
+      {/* Receipt */}
+      <Receipt />
+    </svg>
+  );
+}
+
+/* STAG — taller, more elaborate branching antlers (4-point) */
+function IconStag(props) {
+  return (
+    <svg {...ICON_PROPS} {...props}>
+      {/* Left antler */}
+      <path d="M 92 112 L 78 76 L 62 28" />
+      <path d="M 78 76  L 40 56" />
+      <path d="M 40 56  L 22 64" />
+      <path d="M 40 56  L 34 36" />
+      <path d="M 62 28  L 46 18" />
+      <path d="M 62 28  L 78 14" />
+      {/* Right antler — mirror */}
+      <path d="M 148 112 L 162 76 L 178 28" />
+      <path d="M 162 76  L 200 56" />
+      <path d="M 200 56  L 218 64" />
+      <path d="M 200 56  L 206 36" />
+      <path d="M 178 28  L 194 18" />
+      <path d="M 178 28  L 162 14" />
+      {/* Head */}
+      <path d={HEAD_DEER} />
+      <DeerFace />
+      {/* Receipt */}
+      <Receipt />
+    </svg>
+  );
+}
+
+const ICONS = { deer: IconDeer, ram: IconRam, stag: IconStag };
+const ICON_LABEL = { deer: "Deer", ram: "Ram", stag: "Stag" };
+
+/* ────────────────────────────────────────────────────────────
+   LOCKUP
+   ──────────────────────────────────────────────────────────── */
+function Lockup({ which = "deer", iconSize = 140, fontSize = 16, gap = 16 }) {
+  const Icon = ICONS[which];
+  // viewBox is 240×340. Width = height × (240/340).
+  const w = iconSize * (240/340);
+  return (
+    <div className="lockup" style={{ gap }}>
+      <Icon width={w} height={iconSize} />
+      <div className="wordmark" style={{ fontSize }}>TAXIDERMATT</div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+   ARTBOARDS
+   ──────────────────────────────────────────────────────────── */
+
+function PrimaryDeer() {
+  return <div className="stage tile"><Lockup which="deer" iconSize={170} fontSize={18} gap={20} /></div>;
+}
+function PrimaryRam() {
+  return <div className="stage tile"><Lockup which="ram" iconSize={170} fontSize={18} gap={20} /></div>;
+}
+function PrimaryStag() {
+  return <div className="stage tile"><Lockup which="stag" iconSize={170} fontSize={18} gap={20} /></div>;
+}
+
+function IconOnly({ which }) {
+  const Icon = ICONS[which];
+  const size = 200;
+  return (
+    <div className="stage tile">
+      <Icon width={size * (240/340)} height={size} />
+    </div>
+  );
+}
+
+function SizeLadder({ which = "deer" }) {
+  const Icon = ICONS[which];
+  const sizes = [140, 96, 64, 40, 24];
+  const fonts = [16, 12, 9, 7, 5.5];
+  const gaps =  [16, 12, 8,  6, 4];
+  return (
+    <div className="stage tile" style={{justifyContent:"space-around", padding: 24}}>
+      {sizes.map((s, i) => (
+        <Lockup key={s} which={which} iconSize={s} fontSize={fonts[i]} gap={gaps[i]} />
+      ))}
+    </div>
+  );
+}
+
+function FaviconRow({ which = "deer" }) {
+  const Icon = ICONS[which];
+  const sizes = [128, 80, 48, 32, 16];
+  return (
+    <div className="stage tile" style={{gap: 24}}>
+      {sizes.map((s) => (
+        <div key={s} style={{display:"inline-flex", alignItems:"center", justifyContent:"center", width: s, height: s, background:"#000"}}>
+          <Icon width={s * 0.78} height={s * 0.95} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HorizontalLockup({ which = "deer" }) {
+  const Icon = ICONS[which];
+  return (
+    <div className="stage tile">
+      <div style={{display:"flex", alignItems:"center", gap: 20}}>
+        <Icon width={70} height={98} />
+        <div className="wordmark" style={{fontSize: 22}}>TAXIDERMATT</div>
+      </div>
+    </div>
+  );
+}
+
+function Palette() {
+  return (
+    <div className="stage tile" style={{alignItems:"stretch", justifyContent:"stretch"}}>
+      <div className="swatch-row">
+        <div className="swatch" style={{background:"#00FF41", color:"#000"}}>
+          <div style={{fontFamily:"'IBM Plex Mono',monospace", fontSize: 11, letterSpacing:"0.08em"}}>PHOSPHOR</div>
+          <div style={{fontFamily:"'IBM Plex Mono',monospace", fontSize: 11, letterSpacing:"0.08em", color:"#003311"}}>#00FF41</div>
+        </div>
+        <div className="swatch" style={{background:"#000", color:"#fff"}}>
+          <div className="name">VOID</div>
+          <div className="hex">#000000</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SpecSheet() {
+  return (
+    <div className="stage tile" style={{alignItems:"stretch", justifyContent:"stretch"}}>
+      <div style={{padding: 24, display:"grid", gridTemplateColumns:"1fr 1fr", gap: 12, width:"100%", boxSizing:"border-box", alignContent:"start"}}>
+        <div className="spec">Wordmark</div><div className="spec"><b>TAXIDERMATT</b></div>
+        <div className="spec">Typeface</div><div className="spec"><b>IBM Plex Mono · 600</b></div>
+        <div className="spec">Case</div><div className="spec"><b>All caps</b></div>
+        <div className="spec">Tracking</div><div className="spec"><b>+220 / 1000 em</b></div>
+        <div className="spec">Foreground</div><div className="spec"><b>#00FF41</b></div>
+        <div className="spec">Background</div><div className="spec"><b>#000000</b></div>
+        <div className="spec">Stroke weight</div><div className="spec"><b>4 / 200 viewBox</b></div>
+        <div className="spec">Icon aspect</div><div className="spec"><b>5 : 7  (w : h)</b></div>
+        <div className="spec">Clear space</div><div className="spec"><b>½ cap-height</b></div>
+        <div className="spec">Min size (icon)</div><div className="spec"><b>16 px</b></div>
+      </div>
+    </div>
+  );
+}
+
+/* In-context: a macOS-style app dock tile and a mobile home screen tile */
+function AppTile({ which = "deer", radius = 18, label = true }) {
+  const Icon = ICONS[which];
+  return (
+    <div style={{
+      width: 120, height: 120, background:"#000",
+      borderRadius: radius,
+      display:"flex", alignItems:"center", justifyContent:"center",
+      boxShadow:"inset 0 0 0 1px #1a1a1a",
+    }}>
+      <Icon width={84} height={102} />
+    </div>
+  );
+}
+function AppIconShowcase() {
+  return (
+    <div className="stage tile" style={{gap: 28, background: "#0e0e0e"}}>
+      <div style={{display:"flex", flexDirection:"column", alignItems:"center", gap: 10}}>
+        <AppTile which="deer" radius={28} />
+        <div style={{color:"#888", fontSize: 11, letterSpacing:"0.06em"}}>Taxidermatt</div>
+      </div>
+      <div style={{display:"flex", flexDirection:"column", alignItems:"center", gap: 10}}>
+        <AppTile which="ram" radius={28} />
+        <div style={{color:"#888", fontSize: 11, letterSpacing:"0.06em"}}>Taxidermatt</div>
+      </div>
+      <div style={{display:"flex", flexDirection:"column", alignItems:"center", gap: 10}}>
+        <AppTile which="stag" radius={28} />
+        <div style={{color:"#888", fontSize: 11, letterSpacing:"0.06em"}}>Taxidermatt</div>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+   APP
+   ──────────────────────────────────────────────────────────── */
+function App() {
+  return (
+    <DesignCanvas title="TAXIDERMATT — Icon mark" subtitle="Trophy head + receipt · #00FF41 on #000000">
+      <DCSection id="primary" title="Primary lockups">
+        <DCArtboard id="deer" label="Deer (recommended)" width={420} height={420}>
+          <PrimaryDeer />
+        </DCArtboard>
+        <DCArtboard id="ram" label="Ram" width={420} height={420}>
+          <PrimaryRam />
+        </DCArtboard>
+        <DCArtboard id="stag" label="Stag" width={420} height={420}>
+          <PrimaryStag />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="iconOnly" title="Icon only">
+        <DCArtboard id="iDeer" label="Deer" width={300} height={360}>
+          <IconOnly which="deer" />
+        </DCArtboard>
+        <DCArtboard id="iRam" label="Ram" width={300} height={360}>
+          <IconOnly which="ram" />
+        </DCArtboard>
+        <DCArtboard id="iStag" label="Stag" width={300} height={360}>
+          <IconOnly which="stag" />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="scale" title="Scale">
+        <DCArtboard id="ladder" label="Size ladder (deer)" width={700} height={260}>
+          <SizeLadder which="deer" />
+        </DCArtboard>
+        <DCArtboard id="favicon" label="Favicon / app icon — pixel sizes" width={620} height={220}>
+          <FaviconRow which="deer" />
+        </DCArtboard>
+        <DCArtboard id="horizontal" label="Horizontal lockup" width={620} height={180}>
+          <HorizontalLockup which="deer" />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="context" title="In context">
+        <DCArtboard id="tiles" label="App tiles" width={620} height={240}>
+          <AppIconShowcase />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="system" title="System">
+        <DCArtboard id="palette" label="Palette" width={420} height={240}>
+          <Palette />
+        </DCArtboard>
+        <DCArtboard id="spec" label="Spec sheet" width={620} height={360}>
+          <SpecSheet />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

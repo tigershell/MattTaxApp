@@ -22,8 +22,9 @@ Matt — a developer in Adelaide who knows what a terminal looks like and apprec
 
 ## Typography
 
-- **Heading font:** VT323 — Google Fonts — The authentic old CRT terminal display font. At 32px+ it looks exactly like a phosphor screen. Used for page titles, section headers, vendor names, and any display text.
-- **Body font:** Share Tech Mono — Google Fonts — A cleaner monospace that keeps the terminal character but is genuinely readable at 14px across dense tables and reports.
+- **Heading font:** IBM Plex Mono SemiBold (weight 600) — Google Fonts — Clean, refined monospace with genuine terminal character. Matches the logo mark exactly. Used for page titles, section headers, nav, and all display text.
+- **Body font:** IBM Plex Mono Regular (weight 400) — Google Fonts — Same typeface at regular weight. Single-font system: consistent, no visual clash between heading and body.
+- **Google Fonts import:** `IBM+Plex+Mono:wght@400;500;600;700`
 - **Heading size:** 32px (H1), 24px (H2), 18px (H3)
 - **Body size:** 14px
 - **Small size:** 12px
@@ -37,11 +38,13 @@ Matt — a developer in Adelaide who knows what a terminal looks like and apprec
 
 ## Logo Direction
 
-Three directions explored:
+Three directions explored, two chosen:
 
-1. **Terminal Prompt** — "TAXIDERMATT>" with a blinking cursor block. The app name as a command being entered. Simple, instantly recognisable to anyone who's used a terminal.
-2. **Mounted Receipt** — A minimalist mounted animal head silhouette with a receipt/printout coming from its mouth. Plays on the taxidermy pun literally.
-3. **ASCII Badge** — The name set in a bordered terminal window frame, like a classic software splash screen. Clean, typographic, scalable.
+1. **Terminal Prompt / Primary Mark** ✅ CHOSEN — "TAXIDERMATT" in IBM Plex Mono SemiBold with a blinking phosphor cursor block. Clean, typographic, scalable to any size. The blinking cursor is the only animation in the entire brand.
+2. **Mounted Receipt / Icon Mark** ✅ CHOSEN — Minimalist ram head silhouette with a receipt/printout element. The secondary icon mark — used as a favicon, app icon, and standalone symbol where the full wordmark doesn't fit.
+3. **ASCII Badge** — Terminal window frame with the name inside. Not chosen.
+
+Both chosen marks live in `assets/`. Primary mark: `Taxidermatt Logo.html`. Icon mark: `Taxidermatt Logo - Icon.html`.
 
 ## Do / Don't
 
@@ -49,7 +52,7 @@ Three directions explored:
 |----|-------|
 | Use generous line spacing in tables for readability | Use more than 2 colours on a single screen |
 | Phosphor green for numbers that matter (totals, amounts) | Round corners more than 4px anywhere |
-| Monospace fonts everywhere — it's part of the identity | Use any font other than VT323 or Share Tech Mono |
+| Monospace fonts everywhere — it's part of the identity | Use any font other than IBM Plex Mono |
 | Dense information layout — respect the user's intelligence | Add gradients, shadows, or glow effects |
 | ALL CAPS for labels and navigation items | Use icons without text labels |
 | Dim Green for interactive elements on hover | Mix warm and cool tones — stay in the green spectrum |

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>TAXIDERMATT — Window Frame Logo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --phosphor: #00FF41;
+    --chrome:   #00B32A;
+    --black:    #000000;
+  }
+  html, body { margin: 0; padding: 0; background: #0a0a0a; }
+  body { font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace; color: #aaa; }
+
+  .stage {
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+  }
+  .tile { position: relative; overflow: hidden; }
+
+  /* ────────────────────────────────────────────────
+     TERMINAL WINDOW LOGO
+     All dimensions are em-based so font-size is the
+     single scale control. The border is clamped to >=1px
+     so it never disappears at tiny sizes.
+     ──────────────────────────────────────────────── */
+  .term-win {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    background: var(--black);
+    color: var(--phosphor);
+    border: max(1px, 0.10em) solid var(--chrome);
+    line-height: 1;
+    /* Hard, pixel-perfect edges — no AA fuzz on the chrome */
+    box-sizing: border-box;
+  }
+  .term-win .titlebar {
+    border-bottom: max(1px, 0.10em) solid var(--chrome);
+    padding: 0.42em 0.6em;
+    display: flex;
+    align-items: center;
+    gap: 0.36em;
+    /* Title bar background can be a slightly different shade if desired;
+       keep it black for max contrast */
+    background: var(--black);
+  }
+  .term-win .titlebar .dot {
+    width: 0.58em;
+    height: 0.58em;
+    background: var(--chrome);
+    display: inline-block;
+    /* No border-radius — these are squares, per the spec */
+  }
+  .term-win .titlebar .title {
+    margin-left: auto;
+    margin-right: auto;
+    /* Optical balance against the 3 dots: keep title bar visually centered
+       even though dots take left space. The dot cluster is ~2.5em wide;
+       add a phantom on the right to balance. */
+    color: var(--chrome);
+    font-size: 0.72em;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+    /* hide title text under a certain parent font-size to avoid clutter */
+  }
+  .term-win .titlebar .phantom {
+    width: calc(0.58em * 3 + 0.36em * 2); /* same as the 3-dot cluster */
+    height: 0.58em;
+    /* invisible spacer */
+  }
+  .term-win .body {
+    padding: 0.95em 1.1em;
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--phosphor);
+    white-space: nowrap;
+  }
+  .term-win .body .name { letter-spacing: 0.04em; }
+  .term-win .body .version {
+    color: var(--phosphor);
+    margin-left: 0.5em;
+  }
+
+  /* Cursor block — terminal style. Optional in this lockup */
+  @keyframes blink {
+    0%, 49%   { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+  .cursor {
+    display: inline-block;
+    background: var(--phosphor);
+    width: 0.55em;
+    height: 0.95em;
+    vertical-align: -0.12em;
+    margin-left: 0.18em;
+    animation: blink 1.06s steps(1, end) infinite;
+  }
+
+  /* Variant: prompt line under the main name */
+  .term-win.with-prompt .body {
+    text-align: left;
+    line-height: 1.5;
+  }
+  .term-win.with-prompt .prompt {
+    color: var(--chrome);
+    font-size: 0.72em;
+    margin-top: 0.4em;
+  }
+  .term-win.with-prompt .prompt-arrow { color: var(--phosphor); }
+
+  /* Variant: minimal — no title bar dots, just a rectangle with text */
+  .term-win.minimal .titlebar { display: none; }
+
+  /* Spec sheet styling */
+  .spec { color: #6e6e6e; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .spec b { color: var(--phosphor); font-weight: 500; }
+  .spec .chrome { color: var(--chrome); }
+
+  .swatch-row { display: flex; gap: 12px; align-items: stretch; height: 100%; padding: 24px; box-sizing: border-box; }
+  .swatch { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 16px; border: 1px solid #1a1a1a; }
+  .swatch .name { color: #fff; font-size: 12px; letter-spacing: 0.1em; }
+  .swatch .hex { color: #6e6e6e; font-size: 11px; letter-spacing: 0.08em; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+
+/* ────────────────────────────────────────────────
+   WINDOW LOGO COMPONENT
+   - size: font-size in px (the master scale knob)
+   - showTitle: render "taxidermatt — zsh" in the title bar
+   - variant: "standard" | "with-prompt" | "minimal"
+   ──────────────────────────────────────────────── */
+function WindowLogo({ size = 28, showTitle = false, variant = "standard", showCursor = false, title = "~/taxidermatt — zsh" }) {
+  const classes = ["term-win"];
+  if (variant === "with-prompt") classes.push("with-prompt");
+  if (variant === "minimal") classes.push("minimal");
+
+  return (
+    <div className={classes.join(" ")} style={{ fontSize: size }}>
+      <div className="titlebar">
+        <span className="dot" />
+        <span className="dot" />
+        <span className="dot" />
+        {showTitle && <span className="title">{title}</span>}
+        {showTitle && <span className="phantom" />}
+      </div>
+      <div className="body">
+        {variant === "with-prompt" ? (
+          <React.Fragment>
+            <span className="name">TAXIDERMATT </span>
+            <span className="version">v1.0</span>
+            <div className="prompt">
+              <span className="prompt-arrow">$ </span>
+              <span>ready{showCursor && <span className="cursor" style={{height:"0.9em"}} />}</span>
+            </div>
+          </React.Fragment>
+        ) : (
+          <span>
+            <span className="name">TAXIDERMATT</span>
+            <span className="version">v1.0</span>
+            {showCursor && <span className="cursor" />}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────
+   ARTBOARDS
+   ──────────────────────────────────────────────── */
+
+function PrimaryStandard() {
+  return (
+    <div className="stage tile">
+      <WindowLogo size={30} />
+    </div>
+  );
+}
+
+function PrimaryLarge() {
+  return (
+    <div className="stage tile">
+      <WindowLogo size={36} />
+    </div>
+  );
+}
+
+function WithTitleBar() {
+  return (
+    <div className="stage tile">
+      <WindowLogo size={28} showTitle={true} />
+    </div>
+  );
+}
+
+function WithCursor() {
+  return (
+    <div className="stage tile">
+      <WindowLogo size={32} showCursor={true} />
+    </div>
+  );
+}
+
+function WithPrompt() {
+  return (
+    <div className="stage tile">
+      <WindowLogo size={28} variant="with-prompt" showCursor={true} showTitle={true} />
+    </div>
+  );
+}
+
+function Minimal() {
+  return (
+    <div className="stage tile">
+      <WindowLogo size={30} variant="minimal" />
+    </div>
+  );
+}
+
+function SizeLadder() {
+  return (
+    <div className="stage tile" style={{flexDirection:"column", gap: 18, alignItems:"center"}}>
+      <WindowLogo size={36} />
+      <WindowLogo size={24} />
+      <WindowLogo size={16} />
+      <WindowLogo size={11} />
+    </div>
+  );
+}
+
+function FaviconRow() {
+  // Square crop — just the title bar + part of body, like an app tile
+  return (
+    <div className="stage tile" style={{gap: 24}}>
+      {[128, 80, 48, 32].map((s) => (
+        <div key={s} style={{
+          width: s, height: s, background: "#000",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          boxShadow: "inset 0 0 0 max(1px, " + (s * 0.025) + "px) var(--chrome)",
+        }}>
+          {/* mini window glyph: 3 dots + a "T" mark below */}
+          <div style={{display:"flex", flexDirection:"column", alignItems:"center", gap: s * 0.12}}>
+            <div style={{display:"flex", gap: s * 0.055}}>
+              {[0,1,2].map(i => (
+                <span key={i} style={{width: s*0.075, height: s*0.075, background:"var(--chrome)"}} />
+              ))}
+            </div>
+            <div style={{
+              color: "var(--phosphor)",
+              fontFamily:"'IBM Plex Mono',monospace",
+              fontWeight: 700,
+              fontSize: s * 0.42,
+              lineHeight: 1,
+            }}>T_</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function InAppContext() {
+  // Show how the logo sits in a splash screen / startup
+  return (
+    <div className="stage tile" style={{padding: 40, flexDirection:"column", gap: 20}}>
+      <WindowLogo size={32} showTitle={true} />
+      <div style={{
+        fontFamily:"'IBM Plex Mono',monospace",
+        color:"var(--chrome)", fontSize: 12, letterSpacing: "0.08em",
+        textAlign:"center",
+      }}>
+        loading tax year 2026…
+      </div>
+    </div>
+  );
+}
+
+function Palette() {
+  return (
+    <div className="stage tile" style={{alignItems:"stretch", justifyContent:"stretch"}}>
+      <div className="swatch-row">
+        <div className="swatch" style={{background:"#00FF41", color:"#000"}}>
+          <div style={{fontFamily:"'IBM Plex Mono',monospace", fontSize: 11, letterSpacing:"0.08em"}}>PHOSPHOR</div>
+          <div style={{fontFamily:"'IBM Plex Mono',monospace", fontSize: 11, letterSpacing:"0.08em", color:"#003311"}}>#00FF41</div>
+        </div>
+        <div className="swatch" style={{background:"#00B32A", color:"#000"}}>
+          <div style={{fontFamily:"'IBM Plex Mono',monospace", fontSize: 11, letterSpacing:"0.08em"}}>CHROME</div>
+          <div style={{fontFamily:"'IBM Plex Mono',monospace", fontSize: 11, letterSpacing:"0.08em", color:"#002b0a"}}>#00B32A</div>
+        </div>
+        <div className="swatch" style={{background:"#000", color:"#fff"}}>
+          <div className="name">VOID</div>
+          <div className="hex">#000000</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SpecSheet() {
+  return (
+    <div className="stage tile" style={{alignItems:"stretch", justifyContent:"stretch"}}>
+      <div style={{padding: 24, display:"grid", gridTemplateColumns:"1fr 1fr", gap: 12, width:"100%", boxSizing:"border-box", alignContent:"start"}}>
+        <div className="spec">Wordmark</div><div className="spec"><b>TAXIDERMATT v1.0</b></div>
+        <div className="spec">Typeface</div><div className="spec"><b>IBM Plex Mono · 600</b></div>
+        <div className="spec">Case</div><div className="spec"><b>All caps</b></div>
+        <div className="spec">Tracking</div><div className="spec"><b>+40 / 1000 em</b></div>
+        <div className="spec">Text</div><div className="spec"><b>#00FF41</b></div>
+        <div className="spec">Chrome / border</div><div className="spec"><b className="chrome">#00B32A</b></div>
+        <div className="spec">Background</div><div className="spec"><b>#000000</b></div>
+        <div className="spec">Border weight</div><div className="spec"><b>0.10 em (min 1px)</b></div>
+        <div className="spec">Title-bar dots</div><div className="spec"><b>0.58 em squares · ×3</b></div>
+        <div className="spec">Body padding</div><div className="spec"><b>0.95 × 1.10 em</b></div>
+        <div className="spec">Min size</div><div className="spec"><b>11 px font-size</b></div>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────
+   APP
+   ──────────────────────────────────────────────── */
+function App() {
+  return (
+    <DesignCanvas title="TAXIDERMATT — Terminal Window" subtitle="Window-framed wordmark · #00FF41 text · #00B32A chrome · on #000000">
+      <DCSection id="primary" title="Primary mark">
+        <DCArtboard id="standard" label="Standard" width={520} height={220}>
+          <PrimaryStandard />
+        </DCArtboard>
+        <DCArtboard id="large" label="Large lockup" width={620} height={240}>
+          <PrimaryLarge />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="variants" title="Variants">
+        <DCArtboard id="title" label="With title bar text" width={620} height={220}>
+          <WithTitleBar />
+        </DCArtboard>
+        <DCArtboard id="cursor" label="With blinking cursor" width={620} height={220}>
+          <WithCursor />
+        </DCArtboard>
+        <DCArtboard id="prompt" label="With prompt line" width={620} height={260}>
+          <WithPrompt />
+        </DCArtboard>
+        <DCArtboard id="minimal" label="Minimal (no chrome)" width={520} height={200}>
+          <Minimal />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="scale" title="Scale">
+        <DCArtboard id="ladder" label="Size ladder" width={520} height={360}>
+          <SizeLadder />
+        </DCArtboard>
+        <DCArtboard id="favicon" label="App icon · favicon" width={620} height={220}>
+          <FaviconRow />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="context" title="In context">
+        <DCArtboard id="splash" label="Splash / startup" width={620} height={280}>
+          <InAppContext />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="system" title="System">
+        <DCArtboard id="palette" label="Palette" width={520} height={240}>
+          <Palette />
+        </DCArtboard>
+        <DCArtboard id="spec" label="Spec sheet" width={620} height={400}>
+          <SpecSheet />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

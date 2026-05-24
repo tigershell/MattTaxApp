@@ -6,7 +6,7 @@
 <title>Taxidermatt — Design Preview</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --primary:   #00FF41;
@@ -17,8 +17,8 @@
     --surface:   #121912;
     --border:    #1E3D22;
     --radius:    2px;
-    --font-heading: 'VT323', monospace;
-    --font-body:    'Share Tech Mono', monospace;
+    --font-heading: 'IBM Plex Mono', ui-monospace, monospace;
+    --font-body:    'IBM Plex Mono', ui-monospace, monospace;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -43,10 +43,12 @@
   }
   .nav-logo {
     font-family: var(--font-heading);
-    font-size: 28px;
+    font-size: 18px;
+    font-weight: 600;
     color: var(--primary);
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     text-decoration: none;
+    text-transform: uppercase;
   }
   .nav-logo span { color: var(--muted); font-size: 20px; }
   nav a {
@@ -63,9 +65,11 @@
   .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
   .page-title {
     font-family: var(--font-heading);
-    font-size: 32px;
+    font-size: 28px;
+    font-weight: 600;
     color: var(--primary);
-    letter-spacing: 2px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
     margin-bottom: 4px;
   }
   .page-sub { color: var(--muted); font-size: 12px; margin-bottom: 32px; letter-spacing: 1px; }
@@ -82,16 +86,17 @@
   }
   .panel-title {
     font-family: var(--font-heading);
-    font-size: 18px;
+    font-size: 13px;
+    font-weight: 600;
     color: var(--primary);
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     margin-bottom: 16px;
     text-transform: uppercase;
   }
 
   /* ── Stat cards ── */
   .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
-  .stat-value { font-family: var(--font-heading); font-size: 36px; color: var(--primary); letter-spacing: 1px; }
+  .stat-value { font-family: var(--font-heading); font-size: 28px; font-weight: 600; color: var(--primary); letter-spacing: 1px; }
   .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
   /* ── Tables ── */
@@ -109,7 +114,7 @@
   td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: rgba(0,255,65,0.03); }
-  .amount { color: var(--primary); font-family: var(--font-heading); font-size: 18px; letter-spacing: 1px; }
+  .amount { color: var(--primary); font-family: var(--font-heading); font-size: 14px; font-weight: 600; letter-spacing: 1px; }
   .vendor-name { color: var(--text); }
   .date-col { color: var(--muted); font-size: 12px; }
   .category-tag {
@@ -242,7 +247,7 @@
     font-size: 12px;
     letter-spacing: 1px;
   }
-  .upload-zone strong { display: block; color: var(--primary); font-family: var(--font-heading); font-size: 24px; letter-spacing: 2px; margin-bottom: 8px; }
+  .upload-zone strong { display: block; color: var(--primary); font-family: var(--font-heading); font-size: 16px; font-weight: 600; letter-spacing: 3px; margin-bottom: 8px; }
 
   .flash {
     background: rgba(0,255,65,0.05);
@@ -477,24 +482,28 @@
     </div>
   </div>
 
-  <div class="preview-label">— TYPOGRAPHY</div>
+  <div class="preview-label">— TYPOGRAPHY · IBM PLEX MONO THROUGHOUT</div>
   <div class="type-sample">
-    <div style="font-family:'VT323',monospace; font-size:48px; color:#00FF41; letter-spacing:2px;">TAXIDERMATT</div>
-    <div class="type-meta">VT323 · 48px · Heading / Logo</div>
+    <div style="font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:32px; color:#00FF41; letter-spacing:4px; text-transform:uppercase;">TAXIDERMATT</div>
+    <div class="type-meta">IBM Plex Mono · 700 · 32px · Logo / Display</div>
   </div>
   <div class="type-sample">
-    <div style="font-family:'VT323',monospace; font-size:32px; color:#00FF41; letter-spacing:2px;">FINANCIAL YEAR 2025–26</div>
-    <div class="type-meta">VT323 · 32px · H1 Page Title</div>
+    <div style="font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:28px; color:#00FF41; letter-spacing:3px; text-transform:uppercase;">Financial Year 2025–26</div>
+    <div class="type-meta">IBM Plex Mono · 600 · 28px · H1 Page Title</div>
   </div>
   <div class="type-sample">
-    <div style="font-family:'VT323',monospace; font-size:24px; color:#00FF41;">EXPENSE SUMMARY</div>
-    <div class="type-meta">VT323 · 24px · H2 Section Header</div>
+    <div style="font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:18px; color:#00FF41; letter-spacing:2px; text-transform:uppercase;">Expense Summary</div>
+    <div class="type-meta">IBM Plex Mono · 600 · 18px · H2 Section Header</div>
   </div>
   <div class="type-sample">
-    <div style="font-family:'Share Tech Mono',monospace; font-size:14px; color:#C8ECC8; line-height:1.6; max-width:560px;">
+    <div style="font-family:'IBM Plex Mono',monospace; font-weight:400; font-size:14px; color:#C8ECC8; line-height:1.6; max-width:560px;">
       All expenses tracked for the 2025–26 financial year. Railway and Netlify charges are converted to AUD using the RBA exchange rate on the date of invoice. Amounts shown are fully deductible — GST registration not yet active.
     </div>
-    <div class="type-meta">Share Tech Mono · 14px · Body text</div>
+    <div class="type-meta">IBM Plex Mono · 400 · 14px · Body text</div>
+  </div>
+  <div class="type-sample">
+    <div style="font-family:'IBM Plex Mono',monospace; font-weight:400; font-size:12px; color:#4A7A52; letter-spacing:1px; text-transform:uppercase;">Invoice not yet attached · USD expense · RBA rate applied</div>
+    <div class="type-meta">IBM Plex Mono · 400 · 12px · Muted / Caption</div>
   </div>
 
   <div class="preview-label">— BUTTONS &amp; STATES</div>

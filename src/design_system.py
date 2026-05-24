@@ -16,8 +16,8 @@ SURFACE        = "#121912"   # Dark Panel   — cards, panels, raised surfaces
 BORDER         = "#1E3D22"   # Grid Line    — dividers, input borders, table lines
 
 # ── Typography ────────────────────────────────────────────────────────────────
-FONT_HEADING   = "VT323"           # Google Fonts — authentic CRT terminal display font
-FONT_BODY      = "Share Tech Mono" # Google Fonts — clean readable monospace
+FONT_HEADING   = "IBM Plex Mono"   # Google Fonts — weight 600, matches logo mark exactly
+FONT_BODY      = "IBM Plex Mono"   # Google Fonts — weight 400, single-font system
 
 FONT_SIZE_H1   = 32          # px — page titles
 FONT_SIZE_H2   = 24          # px — section headers
@@ -47,7 +47,7 @@ CSS_VARIABLES = f"""
   --surface:    {SURFACE};
   --border:     {BORDER};
   --radius:     {BORDER_RADIUS}px;
-  --font-heading: '{FONT_HEADING}', monospace;
-  --font-body:    '{FONT_BODY}', monospace;
+  --font-heading: '{FONT_HEADING}', ui-monospace, monospace;
+  --font-body:    '{FONT_BODY}', ui-monospace, monospace;
 }}
 """
