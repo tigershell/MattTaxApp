@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taxidermatt — Design Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary:   #00FF41;
+    --secondary: #00B32A;
+    --bg:        #0A0F0A;
+    --text:      #C8ECC8;
+    --muted:     #4A7A52;
+    --surface:   #121912;
+    --border:    #1E3D22;
+    --radius:    2px;
+    --font-heading: 'VT323', monospace;
+    --font-body:    'Share Tech Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── Nav ── */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    height: 48px;
+  }
+  .nav-logo {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    color: var(--primary);
+    letter-spacing: 2px;
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--muted); font-size: 20px; }
+  nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  nav a:hover, nav a.active { color: var(--primary); }
+  .nav-right { margin-left: auto; color: var(--muted); font-size: 11px; }
+
+  /* ── Layout ── */
+  .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+  .page-title {
+    font-family: var(--font-heading);
+    font-size: 32px;
+    color: var(--primary);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  .page-sub { color: var(--muted); font-size: 12px; margin-bottom: 32px; letter-spacing: 1px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+  /* ── Cards / Panels ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .panel-title {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    color: var(--primary);
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  /* ── Stat cards ── */
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-family: var(--font-heading); font-size: 36px; color: var(--primary); letter-spacing: 1px; }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { border-bottom: 1px solid var(--border); }
+  th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    padding: 8px 12px;
+    font-weight: normal;
+  }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(0,255,65,0.03); }
+  .amount { color: var(--primary); font-family: var(--font-heading); font-size: 18px; letter-spacing: 1px; }
+  .vendor-name { color: var(--text); }
+  .date-col { color: var(--muted); font-size: 12px; }
+  .category-tag {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: var(--radius);
+  }
+
+  /* ── Status badges ── */
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 2px 8px;
+    border-radius: var(--radius);
+  }
+  .badge-ok   { color: var(--primary); border: 1px solid var(--secondary); }
+  .badge-warn { color: #FFAA00; border: 1px solid #664400; }
+  .badge-dim  { color: var(--muted); border: 1px solid var(--border); }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 20px;
+    border-radius: var(--radius);
+    border: 1px solid var(--primary);
+    background: transparent;
+    color: var(--primary);
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .btn:hover { background: var(--primary); color: var(--bg); }
+  .btn-secondary {
+    border-color: var(--border);
+    color: var(--muted);
+  }
+  .btn-secondary:hover { border-color: var(--muted); color: var(--text); background: transparent; }
+  .btn-ghost { border-color: transparent; color: var(--muted); }
+  .btn-ghost:hover { color: var(--primary); background: transparent; border-color: transparent; }
+
+  /* ── Form elements ── */
+  input, select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    padding: 8px 12px;
+    width: 100%;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--secondary);
+  }
+  label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .form-group { margin-bottom: 16px; }
+
+  /* ── Section divider ── */
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+
+  /* ── Design preview sections ── */
+  .preview-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .swatch-row { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+  .swatch {
+    width: 120px;
+  }
+  .swatch-block {
+    width: 120px;
+    height: 60px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .swatch-name { font-size: 11px; color: var(--text); margin-bottom: 2px; }
+  .swatch-hex  { font-size: 11px; color: var(--muted); }
+
+  .type-sample { margin-bottom: 24px; }
+  .type-meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .fy-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 16px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .fy-selector span { color: var(--primary); font-family: var(--font-heading); font-size: 20px; letter-spacing: 1px; }
+
+  .upload-zone {
+    border: 1px dashed var(--secondary);
+    border-radius: var(--radius);
+    padding: 32px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+  .upload-zone strong { display: block; color: var(--primary); font-family: var(--font-heading); font-size: 24px; letter-spacing: 2px; margin-bottom: 8px; }
+
+  .flash {
+    background: rgba(0,255,65,0.05);
+    border: 1px solid var(--secondary);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    font-size: 12px;
+    color: var(--primary);
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+
+  .gst-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--secondary);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .gst-bar strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- ── Navigation ── -->
+<nav>
+  <a href="#" class="nav-logo">TAXIDERMATT<span>_</span></a>
+  <a href="#" class="active">EXPENSES</a>
+  <a href="#">UPLOAD</a>
+  <a href="#">VENDORS</a>
+  <a href="#">TAX REPORT</a>
+  <a href="#">BAS</a>
+  <div class="nav-right">FY 2025–26 &nbsp;|&nbsp; NOT GST REGISTERED &nbsp;|&nbsp; LOGOUT</div>
+</nav>
+
+<!-- ── Expense List Page ── -->
+<div class="page">
+
+  <div class="fy-selector">
+    FINANCIAL YEAR &nbsp;›&nbsp; <span>2025–26</span> &nbsp;|&nbsp; 1 JUL 2025 – 30 JUN 2026
+  </div>
+
+  <div class="page-title">EXPENSES</div>
+  <div class="page-sub">14 RECORDS &nbsp;·&nbsp; AUD $1,847.32 TOTAL &nbsp;·&nbsp; 2 INVOICES PENDING</div>
+
+  <div class="flash">EXPENSE SAVED — RAILWAY HOSTING, AUD $31.40, 14 MAY 2026</div>
+
+  <!-- Stat cards -->
+  <div class="grid-3" style="margin-bottom:32px;">
+    <div class="panel">
+      <div class="stat-label">Total Deductible (AUD)</div>
+      <div class="stat-value">$1,847.32</div>
+      <div class="stat-sub">ACROSS 4 CATEGORIES</div>
+    </div>
+    <div class="panel">
+      <div class="stat-label">Pending Invoices</div>
+      <div class="stat-value" style="color:#FFAA00;">2</div>
+      <div class="stat-sub">PDF NOT YET ATTACHED</div>
+    </div>
+    <div class="panel">
+      <div class="stat-label">This Month</div>
+      <div class="stat-value">$214.80</div>
+      <div class="stat-sub">MAY 2026</div>
+    </div>
+  </div>
+
+  <!-- Expenses table -->
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div class="panel-title" style="margin-bottom:0;">RECENT EXPENSES</div>
+      <a href="#" class="btn">+ UPLOAD INVOICE</a>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Vendor</th>
+          <th>Category</th>
+          <th>Original</th>
+          <th>AUD</th>
+          <th>Invoice</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="date-col">14 MAY 2026</td>
+          <td class="vendor-name">Anthropic</td>
+          <td><span class="category-tag">Software &amp; Subscriptions</span></td>
+          <td class="date-col">AUD $82.50</td>
+          <td class="amount">$82.50</td>
+          <td><span class="badge badge-ok">ATTACHED</span></td>
+          <td><a href="#" class="btn btn-ghost">VIEW</a></td>
+        </tr>
+        <tr>
+          <td class="date-col">12 MAY 2026</td>
+          <td class="vendor-name">Railway</td>
+          <td><span class="category-tag">Domain &amp; Hosting</span></td>
+          <td class="date-col">USD $20.00</td>
+          <td class="amount">$31.40</td>
+          <td><span class="badge badge-warn">PENDING</span></td>
+          <td><a href="#" class="btn btn-ghost">VIEW</a></td>
+        </tr>
+        <tr>
+          <td class="date-col">01 MAY 2026</td>
+          <td class="vendor-name">IP Australia</td>
+          <td><span class="category-tag">Legal &amp; Professional</span></td>
+          <td class="date-col">AUD $330.00</td>
+          <td class="amount">$330.00</td>
+          <td><span class="badge badge-ok">ATTACHED</span></td>
+          <td><a href="#" class="btn btn-ghost">VIEW</a></td>
+        </tr>
+        <tr>
+          <td class="date-col">28 APR 2026</td>
+          <td class="vendor-name">Namecheap</td>
+          <td><span class="category-tag">Domain &amp; Hosting</span></td>
+          <td class="date-col">USD $14.98</td>
+          <td class="amount">$23.60</td>
+          <td><span class="badge badge-warn">PENDING</span></td>
+          <td><a href="#" class="btn btn-ghost">VIEW</a></td>
+        </tr>
+        <tr>
+          <td class="date-col">15 APR 2026</td>
+          <td class="vendor-name">OpenAI</td>
+          <td><span class="category-tag">Software &amp; Subscriptions</span></td>
+          <td class="date-col">USD $40.00</td>
+          <td class="amount">$63.20</td>
+          <td><span class="badge badge-ok">ATTACHED</span></td>
+          <td><a href="#" class="btn btn-ghost">VIEW</a></td>
+        </tr>
+        <tr>
+          <td class="date-col">02 APR 2026</td>
+          <td class="vendor-name">Netlify</td>
+          <td><span class="category-tag">Domain &amp; Hosting</span></td>
+          <td class="date-col">USD $19.00</td>
+          <td class="amount">$29.80</td>
+          <td><span class="badge badge-ok">ATTACHED</span></td>
+          <td><a href="#" class="btn btn-ghost">VIEW</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- Upload page preview -->
+  <div class="preview-label">— UPLOAD PAGE</div>
+  <div class="gst-bar">
+    <strong>GST NOTE:</strong> You are not currently registered for GST. The full invoice amount is recorded as deductible. <a href="#" style="color:var(--secondary);">Set GST registration date →</a>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-title">UPLOAD INVOICE</div>
+      <div class="upload-zone">
+        <strong>DROP PDF HERE</strong>
+        OR CLICK TO SELECT FILE<br><br>
+        <span style="color:var(--secondary);font-size:11px;">CLAUDE WILL EXTRACT DETAILS AUTOMATICALLY</span>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">CONFIRM DETAILS</div>
+      <div class="form-group">
+        <label>Vendor</label>
+        <input type="text" value="fal.ai">
+      </div>
+      <div class="form-group">
+        <label>Invoice Date</label>
+        <input type="text" value="2026-05-10">
+      </div>
+      <div class="form-group">
+        <label>Amount (Original Currency)</label>
+        <input type="text" value="USD 35.00">
+      </div>
+      <div class="form-group">
+        <label>RBA Rate (10 May 2026)</label>
+        <input type="text" value="0.6312 — AUD $55.45">
+      </div>
+      <div class="form-group">
+        <label>ATO Category</label>
+        <select><option>Software &amp; Subscriptions</option></select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <a href="#" class="btn">SAVE EXPENSE</a>
+        <a href="#" class="btn btn-secondary">CANCEL</a>
+      </div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- Design system reference -->
+  <div class="preview-label">— COLOUR PALETTE</div>
+  <div class="swatch-row">
+    <div class="swatch">
+      <div class="swatch-block" style="background:#00FF41;"></div>
+      <div class="swatch-name">Phosphor</div>
+      <div class="swatch-hex">#00FF41 · Primary</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#00B32A;"></div>
+      <div class="swatch-name">Dim Green</div>
+      <div class="swatch-hex">#00B32A · Secondary</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#0A0F0A; border:1px solid #1E3D22;"></div>
+      <div class="swatch-name">Void</div>
+      <div class="swatch-hex">#0A0F0A · Background</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#C8ECC8;"></div>
+      <div class="swatch-name">Screen Glow</div>
+      <div class="swatch-hex">#C8ECC8 · Text</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#4A7A52;"></div>
+      <div class="swatch-name">Faded Signal</div>
+      <div class="swatch-hex">#4A7A52 · Muted</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#121912; border:1px solid #1E3D22;"></div>
+      <div class="swatch-name">Dark Panel</div>
+      <div class="swatch-hex">#121912 · Surface</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#1E3D22;"></div>
+      <div class="swatch-name">Grid Line</div>
+      <div class="swatch-hex">#1E3D22 · Border</div>
+    </div>
+  </div>
+
+  <div class="preview-label">— TYPOGRAPHY</div>
+  <div class="type-sample">
+    <div style="font-family:'VT323',monospace; font-size:48px; color:#00FF41; letter-spacing:2px;">TAXIDERMATT</div>
+    <div class="type-meta">VT323 · 48px · Heading / Logo</div>
+  </div>
+  <div class="type-sample">
+    <div style="font-family:'VT323',monospace; font-size:32px; color:#00FF41; letter-spacing:2px;">FINANCIAL YEAR 2025–26</div>
+    <div class="type-meta">VT323 · 32px · H1 Page Title</div>
+  </div>
+  <div class="type-sample">
+    <div style="font-family:'VT323',monospace; font-size:24px; color:#00FF41;">EXPENSE SUMMARY</div>
+    <div class="type-meta">VT323 · 24px · H2 Section Header</div>
+  </div>
+  <div class="type-sample">
+    <div style="font-family:'Share Tech Mono',monospace; font-size:14px; color:#C8ECC8; line-height:1.6; max-width:560px;">
+      All expenses tracked for the 2025–26 financial year. Railway and Netlify charges are converted to AUD using the RBA exchange rate on the date of invoice. Amounts shown are fully deductible — GST registration not yet active.
+    </div>
+    <div class="type-meta">Share Tech Mono · 14px · Body text</div>
+  </div>
+
+  <div class="preview-label">— BUTTONS &amp; STATES</div>
+  <div style="display:flex;gap:12px;align-items:center;margin-bottom:32px;flex-wrap:wrap;">
+    <a href="#" class="btn">UPLOAD INVOICE</a>
+    <a href="#" class="btn btn-secondary">CANCEL</a>
+    <a href="#" class="btn btn-ghost">VIEW DETAIL</a>
+    <span class="badge badge-ok">INVOICE ATTACHED</span>
+    <span class="badge badge-warn">PENDING</span>
+    <span class="badge badge-dim">MANUAL ENTRY</span>
+  </div>
+
+</div>
+
+</body>
+</html>
