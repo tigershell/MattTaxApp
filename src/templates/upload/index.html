@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Upload Invoice — Tax Tracker{% endblock %}
+{% block content %}
+<h2>Upload Invoice</h2>
+<p>Upload a PDF tax invoice. Claude will extract the details automatically.</p>
+<form method="POST" enctype="multipart/form-data" style="max-width: 400px;">
+    <div class="form-group">
+        <label>PDF Invoice</label>
+        <input type="file" name="invoice" accept=".pdf" required>
+    </div>
+    <button type="submit" class="btn" style="margin-top:8px;" id="submit-btn" onclick="this.textContent='Extracting...'; this.disabled=true; this.form.submit();">
+        Upload & Extract
+    </button>
+</form>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Edit Expense — Tax Tracker{% endblock %}
+{% block content %}
+<h2>Edit Expense</h2>
+<form method="POST" style="max-width: 500px;">
+    <div class="form-group">
+        <label>Vendor</label>
+        <input type="text" name="vendor" value="{{ expense.vendor }}" required>
+    </div>
+    <div class="form-group">
+        <label>Invoice Date</label>
+        <input type="date" name="invoice_date" value="{{ expense.invoice_date }}" required>
+    </div>
+    <div class="form-group">
+        <label>Amount (AUD)</label>
+        <input type="number" name="amount_aud" step="0.01" value="{{ expense.amount_aud }}" required>
+    </div>
+    <div class="form-group">
+        <label>ATO Category</label>
+        <select name="ato_category" required>
+            {% for cat in categories %}
+            <option value="{{ cat }}" {% if cat == expense.ato_category %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Description</label>
+        <input type="text" name="description" value="{{ expense.description or '' }}">
+    </div>
+    <div class="form-group">
+        <label>Notes</label>
+        <textarea name="notes" rows="3">{{ expense.notes or '' }}</textarea>
+    </div>
+    <button type="submit" class="btn" style="margin-top:8px;">Save</button>
+    <a href="{{ url_for('expenses.detail', expense_id=expense.id) }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

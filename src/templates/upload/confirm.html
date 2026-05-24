@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Confirm Expense — Tax Tracker{% endblock %}
+{% block content %}
+<h2>Confirm Expense — {{ filename }}</h2>
+<p>Claude has extracted the following details. Review and correct if needed, then save.</p>
+<form method="POST" action="{{ url_for('upload.confirm') }}" style="max-width: 500px;">
+    <div class="form-group">
+        <label>Vendor</label>
+        <input type="text" name="vendor" value="{{ extracted.get('vendor') or '' }}" required>
+    </div>
+    <div class="form-group">
+        <label>Invoice Date</label>
+        <input type="date" name="invoice_date" value="{{ extracted.get('invoice_date') or '' }}" required>
+    </div>
+    <div class="form-group">
+        <label>Amount (AUD)</label>
+        <input type="number" name="amount_aud" step="0.01" value="{{ extracted.get('amount_aud') or '' }}" required>
+    </div>
+    <div class="form-group">
+        <label>ATO Category</label>
+        <select name="ato_category" required>
+            {% for cat in categories %}
+            <option value="{{ cat }}" {% if cat == extracted.get('ato_category') %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Description</label>
+        <input type="text" name="description" value="{{ extracted.get('description') or '' }}">
+    </div>
+    <div class="form-group">
+        <label>Notes (optional)</label>
+        <textarea name="notes" rows="3"></textarea>
+    </div>
+    <button type="submit" class="btn" style="margin-top:8px;">Save Expense</button>
+    <a href="{{ url_for('upload.upload') }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

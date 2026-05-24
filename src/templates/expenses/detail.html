@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ expense.vendor }} — Tax Tracker{% endblock %}
+{% block content %}
+<h2>{{ expense.vendor }}</h2>
+<p><strong>Date:</strong> {{ expense.formatted_date() }}</p>
+<p><strong>Amount:</strong> {{ expense.formatted_amount() }}</p>
+<p><strong>Category:</strong> {{ expense.ato_category }}</p>
+<p><strong>Description:</strong> {{ expense.description or '—' }}</p>
+<p><strong>Notes:</strong> {{ expense.notes or '—' }}</p>
+
+<div style="margin: 20px 0;">
+    <a href="{{ url_for('expenses.edit', expense_id=expense.id) }}" class="btn btn-secondary">Edit</a>
+    <form method="POST" action="{{ url_for('expenses.delete', expense_id=expense.id) }}" style="display:inline;" onsubmit="return confirm('Delete this expense?')">
+        <button type="submit" class="btn btn-danger">Delete</button>
+    </form>
+</div>
+
+{% if expense.document_id %}
+<h3>Invoice</h3>
+<iframe src="{{ url_for('documents.serve', doc_id=expense.document_id) }}" width="100%" height="600px" style="border:1px solid #ccc;"></iframe>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Expenses — Tax Tracker{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <h2>Expenses — 2025–26</h2>
+    <a href="{{ url_for('upload.upload') }}" class="btn">+ Upload Invoice</a>
+</div>
+
+{% if expenses %}
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Vendor</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for e in expenses %}
+        <tr>
+            <td>{{ e.formatted_date() }}</td>
+            <td>{{ e.vendor }}</td>
+            <td>{{ e.ato_category }}</td>
+            <td>{{ e.formatted_amount() }}</td>
+            <td><a href="{{ url_for('expenses.detail', expense_id=e.id) }}">View</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p style="color:#999;">No expenses yet. <a href="{{ url_for('upload.upload') }}">Upload your first invoice.</a></p>
+{% endif %}
+{% endblock %}

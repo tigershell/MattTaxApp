@@ -1,0 +1,9 @@
+flask
+flask-login
+flask-sqlalchemy
+psycopg2-binary
+anthropic
+python-dotenv
+gunicorn
+pytest
+werkzeug
