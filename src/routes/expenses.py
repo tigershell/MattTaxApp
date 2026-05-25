@@ -7,7 +7,7 @@ expenses_bp = Blueprint("expenses", __name__)
 _service = ExpenseService()
 
 
-@expenses_bp.route("/")
+@expenses_bp.route("/expenses")
 @login_required
 def list_expenses():
     expenses = _service.get_all()
