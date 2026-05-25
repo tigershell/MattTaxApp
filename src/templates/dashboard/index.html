@@ -7,14 +7,14 @@
     <span class="sub">{{ fy.label }}</span>
 </div>
 
-<div class="card-grid">
+<div class="card-grid" style="margin-bottom: 24px;">
+    <div class="stat-card">
+        <div class="stat-label">Total spend (AUD)</div>
+        <div class="stat-value">${{ "{:,.2f}".format(total_aud|float) }}</div>
+    </div>
     <div class="stat-card">
         <div class="stat-label">Expenses this FY</div>
         <div class="stat-value">{{ expense_count }}</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-label">Total spend (AUD)</div>
-        <div class="stat-value">${{ "%.2f"|format(total_aud|float) }}</div>
     </div>
     <div class="stat-card">
         <div class="stat-label">Invoices missing</div>
@@ -26,10 +26,83 @@
     </div>
 </div>
 
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+
+    {% if by_category %}
+    <div class="card">
+        <div class="text-dim" style="font-size: 11px; margin-bottom: 16px;">SPEND BY CATEGORY</div>
+        {% for cat, amount in by_category %}
+        {% set pct = (amount / total_aud * 100) if total_aud else 0 %}
+        <div style="margin-bottom: 12px;">
+            <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+                <span>{{ cat }}</span>
+                <span style="color:var(--green);">${{ "{:,.2f}".format(amount|float) }}</span>
+            </div>
+            <div style="background:var(--surface); border-radius:2px; height:4px;">
+                <div style="background:var(--green-dark); height:4px; border-radius:2px; width:{{ pct }}%;"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if by_vendor %}
+    <div class="card">
+        <div class="text-dim" style="font-size: 11px; margin-bottom: 16px;">SPEND BY VENDOR</div>
+        {% set max_vendor = by_vendor[0].total %}
+        {% for v in by_vendor %}
+        {% set pct = (v.total / total_aud * 100) if total_aud else 0 %}
+        <div style="margin-bottom: 12px;">
+            <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+                <a href="{{ url_for('vendors.vendor_detail', vendor_id=v.id) }}" style="color:inherit;">{{ v.name }}</a>
+                <span style="color:var(--green);">${{ "{:,.2f}".format(v.total|float) }}</span>
+            </div>
+            <div style="background:var(--surface); border-radius:2px; height:4px;">
+                <div style="background:var(--green-dark); height:4px; border-radius:2px; width:{{ pct }}%;"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+
+{% if recent %}
+<div class="card" style="margin-bottom: 24px;">
+    <div class="text-dim" style="font-size: 11px; margin-bottom: 16px;">RECENT EXPENSES</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Vendor</th>
+                <th>Amount (AUD)</th>
+                <th>Category</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for e in recent %}
+            <tr>
+                <td>{{ e.formatted_date() }}</td>
+                <td>{{ e.vendor.name }}</td>
+                <td>{{ e.formatted_amount() }}</td>
+                <td class="text-dim">{{ e.ato_category }}</td>
+                <td class="text-right"><a href="{{ url_for('expenses.detail', expense_id=e.id) }}" class="btn btn-sm">View</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card text-dim" style="margin-bottom: 24px;">
+    No expenses yet for {{ fy.label }}. <a href="{{ url_for('upload.upload') }}" style="color:var(--green-dim);">Upload your first invoice.</a>
+</div>
+{% endif %}
+
 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-    <a href="{{ url_for('expenses.list_expenses') }}" class="btn">View Expenses</a>
-    <a href="{{ url_for('years.list_years') }}" class="btn btn-muted">Financial Years</a>
+    <a href="{{ url_for('expenses.list_expenses') }}" class="btn">All Expenses</a>
     <a href="{{ url_for('reports.report') }}" class="btn btn-muted">Tax Summary</a>
+    <a href="{{ url_for('years.list_years') }}" class="btn btn-muted">Financial Years</a>
 </div>
 
 {% endblock %}

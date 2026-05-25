@@ -1,15 +1,122 @@
 {% extends "base.html" %}
-{% block title %}Upload Invoice — Tax Tracker{% endblock %}
+{% block title %}Upload Invoice — Taxidermatt{% endblock %}
 {% block content %}
-<h2>Upload Invoice</h2>
-<p>Upload a PDF tax invoice. Claude will extract the details automatically.</p>
-<form method="POST" enctype="multipart/form-data" style="max-width: 400px;">
-    <div class="form-group">
-        <label>PDF Invoice</label>
-        <input type="file" name="invoice" accept=".pdf" required>
-    </div>
-    <button type="submit" class="btn" style="margin-top:8px;" id="submit-btn" onclick="this.textContent='Extracting...'; this.disabled=true; this.form.submit();">
-        Upload & Extract
-    </button>
-</form>
+
+<div class="page-header">
+    <h1>Upload Invoice</h1>
+    <span class="sub">Claude extracts the details — you review before saving</span>
+</div>
+
+<div class="card" style="max-width: 500px;">
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('upload.upload') }}" id="upload-form">
+        <input type="file" id="invoice" name="invoice" accept=".pdf" required style="display:none;">
+
+        <div id="drop-zone">
+            <div id="drop-label">
+                <span id="drop-icon">&#8659;</span>
+                <span id="drop-text">Drop PDF here</span>
+                <span id="drop-sub">or <a href="#" id="browse-link">browse</a></span>
+            </div>
+            <div id="file-chosen" style="display:none;">
+                <span id="file-name"></span>
+                <a href="#" id="clear-file">&#x2715;</a>
+            </div>
+        </div>
+
+        <div class="form-actions" style="margin-top: 16px;">
+            <button type="submit" class="btn" id="submit-btn" disabled>
+                Extract &amp; Review
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+#drop-zone {
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+    padding: 40px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    color: var(--text-dim);
+}
+#drop-zone.dragover {
+    border-color: var(--green);
+    background: rgba(0,255,65,0.04);
+    color: var(--green);
+}
+#drop-zone.has-file {
+    border-color: var(--green-dark);
+    background: rgba(0,255,65,0.03);
+}
+#drop-icon { font-size: 28px; display: block; margin-bottom: 8px; }
+#drop-text { display: block; font-size: 15px; margin-bottom: 4px; }
+#drop-sub  { font-size: 12px; }
+#drop-sub a { color: var(--green-dim); }
+#file-name { color: var(--green); font-size: 13px; word-break: break-all; }
+#clear-file { color: var(--text-muted); margin-left: 10px; font-size: 14px; text-decoration: none; }
+#clear-file:hover { color: var(--green); }
+</style>
+
+<script>
+const dropZone   = document.getElementById('drop-zone');
+const fileInput  = document.getElementById('invoice');
+const browseLink = document.getElementById('browse-link');
+const dropLabel  = document.getElementById('drop-label');
+const fileChosen = document.getElementById('file-chosen');
+const fileName   = document.getElementById('file-name');
+const clearFile  = document.getElementById('clear-file');
+const submitBtn  = document.getElementById('submit-btn');
+const form       = document.getElementById('upload-form');
+
+function setFile(file) {
+    if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+        alert('Please select a PDF file.');
+        return;
+    }
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+    fileName.textContent = file.name;
+    dropLabel.style.display = 'none';
+    fileChosen.style.display = 'block';
+    dropZone.classList.add('has-file');
+    submitBtn.disabled = false;
+}
+
+function clearSelection() {
+    fileInput.value = '';
+    dropLabel.style.display = 'block';
+    fileChosen.style.display = 'none';
+    dropZone.classList.remove('has-file');
+    submitBtn.disabled = true;
+}
+
+dropZone.addEventListener('click', () => fileInput.click());
+browseLink.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
+clearFile.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); clearSelection(); });
+
+fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) setFile(fileInput.files[0]);
+});
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) setFile(file);
+});
+
+form.addEventListener('submit', () => {
+    submitBtn.textContent = 'Extracting...';
+    submitBtn.disabled = true;
+});
+</script>
+
 {% endblock %}

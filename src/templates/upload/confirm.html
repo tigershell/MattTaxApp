@@ -1,38 +1,133 @@
 {% extends "base.html" %}
-{% block title %}Confirm Expense — Tax Tracker{% endblock %}
+{% block title %}Review Invoice — Taxidermatt{% endblock %}
 {% block content %}
-<h2>Confirm Expense — {{ filename }}</h2>
-<p>Claude has extracted the following details. Review and correct if needed, then save.</p>
-<form method="POST" action="{{ url_for('upload.confirm') }}" style="max-width: 500px;">
-    <div class="form-group">
-        <label>Vendor</label>
-        <input type="text" name="vendor" value="{{ extracted.get('vendor') or '' }}" required>
-    </div>
-    <div class="form-group">
-        <label>Invoice Date</label>
-        <input type="date" name="invoice_date" value="{{ extracted.get('invoice_date') or '' }}" required>
-    </div>
-    <div class="form-group">
-        <label>Amount (AUD)</label>
-        <input type="number" name="amount_aud" step="0.01" value="{{ extracted.get('amount_aud') or '' }}" required>
-    </div>
-    <div class="form-group">
-        <label>ATO Category</label>
-        <select name="ato_category" required>
-            {% for cat in categories %}
-            <option value="{{ cat }}" {% if cat == extracted.get('ato_category') %}selected{% endif %}>{{ cat }}</option>
+
+<div class="page-header">
+    <h1>Review Extraction</h1>
+    <span class="sub">{{ filename }}</span>
+</div>
+
+<p class="text-dim" style="margin-bottom: 20px; font-size: 13px;">
+    Claude has extracted the fields below. Review and correct anything before saving.
+</p>
+
+<div class="card" style="max-width: 600px;">
+<form method="POST" action="{{ url_for('upload.confirm') }}">
+
+    <label for="vendor_id">Vendor</label>
+    <select id="vendor_id" name="vendor_id" required>
+        <option value="">— select vendor —</option>
+        {% for vendor in vendors %}
+        <option value="{{ vendor.id }}"
+            {% if vendor.id == matched_vendor_id %}selected{% endif %}>
+            {{ vendor.name }} ({{ vendor.default_currency }})
+        </option>
+        {% endfor %}
+        <option value="new" {% if not matched_vendor_id %}selected{% endif %}>— Add new vendor —</option>
+    </select>
+
+    <div id="new-vendor-section" style="display:none; border-left: 2px solid var(--green-dark); padding-left: 16px; margin-top: 12px;">
+        <p class="text-dim" style="font-size: 12px; margin-bottom: 12px;">New vendor details — saved automatically with this expense.</p>
+
+        <label for="new_vendor_name">Vendor Name</label>
+        <input type="text" id="new_vendor_name" name="new_vendor_name"
+               value="{{ extracted.get('vendor') or '' }}" maxlength="100">
+
+        <label for="new_vendor_currency">Default Currency</label>
+        <select id="new_vendor_currency" name="new_vendor_currency">
+            <option value="AUD" {% if (extracted.get('currency') or 'AUD') == 'AUD' %}selected{% endif %}>AUD</option>
+            <option value="USD" {% if extracted.get('currency') == 'USD' %}selected{% endif %}>USD</option>
+            <option value="EUR" {% if extracted.get('currency') == 'EUR' %}selected{% endif %}>EUR</option>
+            <option value="GBP" {% if extracted.get('currency') == 'GBP' %}selected{% endif %}>GBP</option>
+        </select>
+
+        <label for="new_vendor_ato_category">Default ATO Category</label>
+        <select id="new_vendor_ato_category" name="new_vendor_ato_category">
+            {% for cat in ato_categories %}
+            <option value="{{ cat }}"
+                {% if cat == extracted.get('ato_category') %}selected{% endif %}>
+                {{ cat }}
+            </option>
             {% endfor %}
         </select>
+
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="new_vendor_charges_gst" name="new_vendor_charges_gst" value="1">
+            <span>Charges GST</span>
+        </label>
     </div>
-    <div class="form-group">
-        <label>Description</label>
-        <input type="text" name="description" value="{{ extracted.get('description') or '' }}">
+
+    <label for="invoice_date">Invoice Date</label>
+    <input type="date" id="invoice_date" name="invoice_date"
+           value="{{ extracted.get('invoice_date') or '' }}" required>
+
+    <label for="currency">Currency</label>
+    <select id="currency" name="currency">
+        <option value="AUD" {% if (extracted.get('currency') or 'AUD') == 'AUD' %}selected{% endif %}>AUD</option>
+        <option value="USD" {% if extracted.get('currency') == 'USD' %}selected{% endif %}>USD</option>
+        <option value="EUR" {% if extracted.get('currency') == 'EUR' %}selected{% endif %}>EUR</option>
+        <option value="GBP" {% if extracted.get('currency') == 'GBP' %}selected{% endif %}>GBP</option>
+    </select>
+
+    <label for="amount_original">Amount (in above currency)</label>
+    <input type="number" id="amount_original" name="amount_original"
+           step="0.01" min="0"
+           value="{{ extracted.get('amount_original') or extracted.get('amount_aud') or '' }}" required>
+
+    <label for="gst_amount">GST Amount (leave blank if none or unknown)</label>
+    <input type="number" id="gst_amount" name="gst_amount"
+           step="0.01" min="0"
+           value="{{ extracted.get('gst_amount') or '' }}">
+
+    <label for="ato_category">ATO Category</label>
+    <select id="ato_category" name="ato_category" required>
+        {% for cat in ato_categories %}
+        <option value="{{ cat }}"
+            {% if cat == extracted.get('ato_category') %}selected{% endif %}>
+            {{ cat }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <label for="description">Description</label>
+    <input type="text" id="description" name="description"
+           value="{{ extracted.get('description') or '' }}" maxlength="200">
+
+    <label for="notes">Notes (optional)</label>
+    <textarea id="notes" name="notes"></textarea>
+
+    <div id="manual-rate-section" style="display:none;">
+        <label for="manual_rate">Manual RBA Rate (AUD per 1 USD — only if auto-fetch failed)</label>
+        <input type="number" id="manual_rate" name="manual_rate" step="0.000001" min="0">
+        <p class="text-muted" style="font-size:12px; margin-top:4px;">
+            Check the <a href="https://www.rba.gov.au/statistics/frequency/exchange-rates.html"
+            target="_blank" style="color:var(--green-dim);">RBA website</a> for the rate on the invoice date.
+        </p>
     </div>
-    <div class="form-group">
-        <label>Notes (optional)</label>
-        <textarea name="notes" rows="3"></textarea>
+
+    <div class="form-actions">
+        <button type="submit" class="btn">Save Expense</button>
+        <a href="{{ url_for('upload.upload') }}" class="btn btn-muted">Cancel</a>
     </div>
-    <button type="submit" class="btn" style="margin-top:8px;">Save Expense</button>
-    <a href="{{ url_for('upload.upload') }}" class="btn btn-secondary">Cancel</a>
 </form>
+</div>
+
+<script>
+// Show manual rate field when currency is not AUD
+document.getElementById('currency').addEventListener('change', function() {
+    document.getElementById('manual-rate-section').style.display =
+        this.value !== 'AUD' ? 'block' : 'none';
+});
+document.getElementById('currency').dispatchEvent(new Event('change'));
+
+// Show new vendor section when "Add new vendor" is selected
+const vendorSelect = document.getElementById('vendor_id');
+const newVendorSection = document.getElementById('new-vendor-section');
+function toggleNewVendor() {
+    newVendorSection.style.display = vendorSelect.value === 'new' ? 'block' : 'none';
+}
+vendorSelect.addEventListener('change', toggleNewVendor);
+toggleNewVendor();
+</script>
+
 {% endblock %}

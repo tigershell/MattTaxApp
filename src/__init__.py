@@ -38,6 +38,7 @@ def create_app() -> Flask:
     from .routes.auth import auth_bp
     from .routes.dashboard import dashboard_bp
     from .routes.expenses import expenses_bp
+    from .routes.upload import upload_bp
     from .routes.vendors import vendors_bp
     from .routes.years import years_bp
     from .routes.reports import reports_bp
@@ -45,6 +46,7 @@ def create_app() -> Flask:
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(expenses_bp)
+    app.register_blueprint(upload_bp)
     app.register_blueprint(vendors_bp)
     app.register_blueprint(years_bp)
     app.register_blueprint(reports_bp)

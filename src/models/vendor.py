@@ -20,6 +20,7 @@ class Vendor(db.Model):
     ato_category = db.Column(db.String(100), nullable=False, default="Software & Subscriptions")
     sync_frequency = db.Column(db.String(20), nullable=False, default="on_demand")  # monthly / on_demand
     pdf_required = db.Column(db.Boolean, nullable=False, default=True)
+    billing_url = db.Column(db.String(500), nullable=True)
     notes = db.Column(db.Text, nullable=True)
 
     expenses = db.relationship("Expense", backref="vendor", lazy=True)

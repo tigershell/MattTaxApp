@@ -40,6 +40,10 @@
         <label for="pdf_required">PDF invoice required for ATO</label>
     </div>
 
+    <label for="billing_url">Billing URL (link to their billing/invoices page)</label>
+    <input type="url" id="billing_url" name="billing_url"
+           value="{{ vendor.billing_url or '' }}" placeholder="https://...">
+
     <label for="notes">Notes</label>
     <textarea id="notes" name="notes">{{ vendor.notes or '' }}</textarea>
 

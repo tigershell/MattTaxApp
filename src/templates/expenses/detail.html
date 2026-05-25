@@ -1,22 +1,106 @@
 {% extends "base.html" %}
-{% block title %}{{ expense.vendor }} — Tax Tracker{% endblock %}
+{% block title %}{{ expense.vendor.name }} — Taxidermatt{% endblock %}
 {% block content %}
-<h2>{{ expense.vendor }}</h2>
-<p><strong>Date:</strong> {{ expense.formatted_date() }}</p>
-<p><strong>Amount:</strong> {{ expense.formatted_amount() }}</p>
-<p><strong>Category:</strong> {{ expense.ato_category }}</p>
-<p><strong>Description:</strong> {{ expense.description or '—' }}</p>
-<p><strong>Notes:</strong> {{ expense.notes or '—' }}</p>
 
-<div style="margin: 20px 0;">
-    <a href="{{ url_for('expenses.edit', expense_id=expense.id) }}" class="btn btn-secondary">Edit</a>
-    <form method="POST" action="{{ url_for('expenses.delete', expense_id=expense.id) }}" style="display:inline;" onsubmit="return confirm('Delete this expense?')">
+<div class="page-header">
+    <h1>{{ expense.vendor.name }}</h1>
+    <span class="sub">{{ expense.formatted_date() }}</span>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 800px; margin-bottom: 24px;">
+
+    <div class="card">
+        <div class="text-dim" style="font-size: 11px; margin-bottom: 4px;">AMOUNT (AUD)</div>
+        <div style="font-size: 24px; color: var(--green);">{{ expense.formatted_amount() }}</div>
+        {% if expense.currency != 'AUD' %}
+        <div class="text-dim" style="font-size: 12px; margin-top: 4px;">
+            {{ expense.currency }} {{ "%.2f"|format(expense.amount_original) }}
+            {% if expense.rba_rate %}
+            @ {{ "%.6f"|format(expense.rba_rate) }}
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="text-dim" style="font-size: 11px; margin-bottom: 4px;">GST</div>
+        <div style="font-size: 24px; color: var(--green);">
+            {% if expense.gst_amount %}
+                ${{ "%.2f"|format(expense.gst_amount) }}
+            {% else %}
+                —
+            {% endif %}
+        </div>
+        <div class="text-dim" style="font-size: 12px; margin-top: 4px;">
+            {% if expense.gst_applies() %}GST applies{% else %}No GST{% endif %}
+        </div>
+    </div>
+
+</div>
+
+<div class="card" style="max-width: 800px; margin-bottom: 24px;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td class="text-dim" style="padding: 8px 0; width: 180px; font-size: 13px;">ATO Category</td>
+            <td style="padding: 8px 0;">{{ expense.ato_category }}</td>
+        </tr>
+        <tr>
+            <td class="text-dim" style="padding: 8px 0; font-size: 13px;">Financial Year</td>
+            <td style="padding: 8px 0;">{{ expense.financial_year.label }}</td>
+        </tr>
+        <tr>
+            <td class="text-dim" style="padding: 8px 0; font-size: 13px;">Description</td>
+            <td style="padding: 8px 0;">{{ expense.description or '—' }}</td>
+        </tr>
+        <tr>
+            <td class="text-dim" style="padding: 8px 0; font-size: 13px;">Notes</td>
+            <td style="padding: 8px 0;">{{ expense.notes or '—' }}</td>
+        </tr>
+        <tr>
+            <td class="text-dim" style="padding: 8px 0; font-size: 13px;">Source</td>
+            <td style="padding: 8px 0;">{{ expense.source.value.replace('_', ' ') }}</td>
+        </tr>
+        <tr>
+            <td class="text-dim" style="padding: 8px 0; font-size: 13px;">Invoice Attached</td>
+            <td style="padding: 8px 0;">
+                {% if expense.invoice_attached %}
+                    <span class="badge badge-green">Yes</span>
+                {% else %}
+                    <span class="badge badge-dim">No</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td class="text-dim" style="padding: 8px 0; font-size: 13px;">Saved</td>
+            <td style="padding: 8px 0;">{{ expense.created_at.strftime('%d %b %Y %H:%M') }}</td>
+        </tr>
+    </table>
+</div>
+
+{% if expense.invoice_attached %}
+<div class="card" style="max-width: 800px; margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="font-size: 13px; color: var(--green-dim);">INVOICE PDF</span>
+        <a href="{{ url_for('expenses.serve_pdf', expense_id=expense.id) }}"
+           target="_blank" class="btn btn-muted" style="font-size: 12px; padding: 4px 12px;">
+            Open in new tab
+        </a>
+    </div>
+    <iframe src="{{ url_for('expenses.serve_pdf', expense_id=expense.id) }}"
+            width="100%" height="700px"
+            style="border: 1px solid var(--border); border-radius: 4px;">
+    </iframe>
+</div>
+{% endif %}
+
+<div class="form-actions" style="max-width: 800px;">
+    <a href="{{ url_for('expenses.list_expenses') }}" class="btn btn-muted">← Back</a>
+    <a href="{{ url_for('expenses.edit', expense_id=expense.id) }}" class="btn">Edit</a>
+    <form method="POST" action="{{ url_for('expenses.delete', expense_id=expense.id) }}"
+          style="display:inline;"
+          onsubmit="return confirm('Delete Expense #{{ expense.id }}? This cannot be undone.');">
         <button type="submit" class="btn btn-danger">Delete</button>
     </form>
 </div>
 
-{% if expense.document_id %}
-<h3>Invoice</h3>
-<iframe src="{{ url_for('documents.serve', doc_id=expense.document_id) }}" width="100%" height="600px" style="border:1px solid #ccc;"></iframe>
-{% endif %}
 {% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{{ vendor.name }} — Taxidermatt{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>{{ vendor.name }}</h1>
+    <span class="sub">{{ vendor.default_currency }} &middot; {{ vendor.ato_category }}</span>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 700px; margin-bottom: 24px;">
+    <div class="card">
+        <div class="text-dim" style="font-size: 11px; margin-bottom: 4px;">TOTAL SPENT (AUD)</div>
+        <div style="font-size: 22px; color: var(--green);">${{ "{:,.2f}".format(total_aud) }}</div>
+    </div>
+    <div class="card">
+        <div class="text-dim" style="font-size: 11px; margin-bottom: 4px;">INVOICES</div>
+        <div style="font-size: 22px; color: var(--green);">{{ expenses|length }}</div>
+    </div>
+    <div class="card">
+        <div class="text-dim" style="font-size: 11px; margin-bottom: 4px;">CHARGES GST</div>
+        <div style="font-size: 22px; color: var(--green);">{{ 'Yes' if vendor.charges_gst else 'No' }}</div>
+    </div>
+</div>
+
+{% if expenses %}
+<div class="card" style="margin-bottom: 24px;">
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Amount (AUD)</th>
+            <th>Currency</th>
+            <th>Description</th>
+            <th>Invoice</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for e in expenses %}
+        <tr>
+            <td>{{ e.formatted_date() }}</td>
+            <td>{{ e.formatted_amount() }}</td>
+            <td class="text-dim">
+                {% if e.currency != 'AUD' %}
+                    {{ e.currency }} {{ "%.2f"|format(e.amount_original) }}
+                {% else %}
+                    AUD
+                {% endif %}
+            </td>
+            <td class="text-dim">{{ e.description or '—' }}</td>
+            <td>
+                {% if e.invoice_attached %}
+                    <span class="badge badge-green">Attached</span>
+                {% else %}
+                    <span class="badge badge-dim">Missing</span>
+                {% endif %}
+            </td>
+            <td class="text-right">
+                <a href="{{ url_for('expenses.detail', expense_id=e.id) }}" class="btn btn-sm">View</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<div class="card text-dim" style="margin-bottom: 24px;">No expenses recorded for {{ vendor.name }} yet.</div>
+{% endif %}
+
+<div class="form-actions">
+    <a href="{{ url_for('vendors.list_vendors') }}" class="btn btn-muted">← Back to Vendors</a>
+    <a href="{{ url_for('vendors.edit_vendor', vendor_id=vendor.id) }}" class="btn">Edit Vendor</a>
+    {% if vendor.billing_url %}
+    <a href="{{ vendor.billing_url }}" target="_blank" class="btn btn-muted">Open Billing Page ↗</a>
+    {% endif %}
+</div>
+
+{% endblock %}

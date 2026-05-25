@@ -23,7 +23,7 @@
     <tbody>
     {% for vendor in vendors %}
         <tr>
-            <td>{{ vendor.name }}</td>
+            <td><a href="{{ url_for('vendors.vendor_detail', vendor_id=vendor.id) }}" style="color:var(--green);">{{ vendor.name }}</a></td>
             <td>{{ vendor.default_currency }}</td>
             <td>{% if vendor.charges_gst %}<span class="badge badge-green">Yes</span>{% else %}<span class="badge badge-dim">No</span>{% endif %}</td>
             <td>{% if vendor.api_available %}<span class="badge badge-green">Yes</span>{% else %}<span class="badge badge-dim">No</span>{% endif %}</td>

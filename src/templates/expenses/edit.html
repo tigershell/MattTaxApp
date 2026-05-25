@@ -1,37 +1,78 @@
 {% extends "base.html" %}
-{% block title %}Edit Expense — Tax Tracker{% endblock %}
+{% block title %}Edit Expense — Taxidermatt{% endblock %}
 {% block content %}
-<h2>Edit Expense</h2>
-<form method="POST" style="max-width: 500px;">
-    <div class="form-group">
-        <label>Vendor</label>
-        <input type="text" name="vendor" value="{{ expense.vendor }}" required>
+
+<div class="page-header">
+    <h1>Edit Expense</h1>
+    <span class="sub">#{{ expense.id }} — {{ expense.vendor.name }}</span>
+</div>
+
+<div class="card" style="max-width: 600px;">
+<form method="POST" action="{{ url_for('expenses.edit', expense_id=expense.id) }}">
+
+    <label for="vendor_id">Vendor</label>
+    <select id="vendor_id" name="vendor_id" required>
+        {% for vendor in vendors %}
+        <option value="{{ vendor.id }}"
+            {% if vendor.id == expense.vendor_id %}selected{% endif %}>
+            {{ vendor.name }} ({{ vendor.default_currency }})
+        </option>
+        {% endfor %}
+    </select>
+
+    <label for="invoice_date">Invoice Date</label>
+    <input type="date" id="invoice_date" name="invoice_date"
+           value="{{ expense.invoice_date.isoformat() }}" required>
+
+    <label for="currency">Currency</label>
+    <select id="currency" name="currency">
+        <option value="AUD" {% if expense.currency == 'AUD' %}selected{% endif %}>AUD</option>
+        <option value="USD" {% if expense.currency == 'USD' %}selected{% endif %}>USD</option>
+        <option value="EUR" {% if expense.currency == 'EUR' %}selected{% endif %}>EUR</option>
+        <option value="GBP" {% if expense.currency == 'GBP' %}selected{% endif %}>GBP</option>
+    </select>
+
+    <label for="amount_original">Amount (in above currency)</label>
+    <input type="number" id="amount_original" name="amount_original"
+           step="0.01" min="0" value="{{ expense.amount_original }}" required>
+
+    <label for="amount_aud">Amount AUD</label>
+    <input type="number" id="amount_aud" name="amount_aud"
+           step="0.01" min="0" value="{{ expense.amount_aud }}" required>
+
+    <label for="rba_rate">Exchange Rate (AUD per 1 unit of foreign currency — blank for AUD expenses)</label>
+    <input type="number" id="rba_rate" name="rba_rate"
+           step="0.000001" min="0"
+           value="{{ expense.rba_rate if expense.rba_rate else '' }}">
+
+    <label for="gst_amount">GST Amount (leave blank if none)</label>
+    <input type="number" id="gst_amount" name="gst_amount"
+           step="0.01" min="0"
+           value="{{ expense.gst_amount if expense.gst_amount else '' }}">
+
+    <label for="ato_category">ATO Category</label>
+    <select id="ato_category" name="ato_category" required>
+        {% for cat in ato_categories %}
+        <option value="{{ cat }}"
+            {% if cat == expense.ato_category %}selected{% endif %}>
+            {{ cat }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <label for="description">Description</label>
+    <input type="text" id="description" name="description"
+           value="{{ expense.description or '' }}" maxlength="200">
+
+    <label for="notes">Notes</label>
+    <textarea id="notes" name="notes">{{ expense.notes or '' }}</textarea>
+
+    <div class="form-actions">
+        <button type="submit" class="btn">Save Changes</button>
+        <a href="{{ url_for('expenses.detail', expense_id=expense.id) }}" class="btn btn-muted">Cancel</a>
     </div>
-    <div class="form-group">
-        <label>Invoice Date</label>
-        <input type="date" name="invoice_date" value="{{ expense.invoice_date }}" required>
-    </div>
-    <div class="form-group">
-        <label>Amount (AUD)</label>
-        <input type="number" name="amount_aud" step="0.01" value="{{ expense.amount_aud }}" required>
-    </div>
-    <div class="form-group">
-        <label>ATO Category</label>
-        <select name="ato_category" required>
-            {% for cat in categories %}
-            <option value="{{ cat }}" {% if cat == expense.ato_category %}selected{% endif %}>{{ cat }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="form-group">
-        <label>Description</label>
-        <input type="text" name="description" value="{{ expense.description or '' }}">
-    </div>
-    <div class="form-group">
-        <label>Notes</label>
-        <textarea name="notes" rows="3">{{ expense.notes or '' }}</textarea>
-    </div>
-    <button type="submit" class="btn" style="margin-top:8px;">Save</button>
-    <a href="{{ url_for('expenses.detail', expense_id=expense.id) }}" class="btn btn-secondary">Cancel</a>
+
 </form>
+</div>
+
 {% endblock %}

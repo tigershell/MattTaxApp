@@ -29,9 +29,9 @@
 {% endfor %}
 
 <h3 style="margin-top:30px;">ATO myTax Instructions</h3>
-<ol>
-    {% for instruction in summary.ato_instructions[1:] %}
-    <li>{{ instruction }}</li>
+<ul style="list-style: none; padding: 0;">
+    {% for instruction in summary.ato_instructions %}
+    <li style="margin-bottom: 6px;">{{ instruction }}</li>
     {% endfor %}
-</ol>
+</ul>
 {% endblock %}
