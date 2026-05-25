@@ -1,6 +1,39 @@
 {% extends "base.html" %}
 {% block title %}Vendors — Taxidermatt{% endblock %}
 {% block content %}
-<h1>Vendors</h1>
-<p>Vendor management coming in M1.</p>
+
+<div class="page-header">
+    <h1>Vendors</h1>
+    <span class="sub">{{ vendors|length }} configured</span>
+</div>
+
+<div class="card">
+<table>
+    <thead>
+        <tr>
+            <th>Vendor</th>
+            <th>Currency</th>
+            <th>Charges GST</th>
+            <th>API Sync</th>
+            <th>ATO Category</th>
+            <th>PDF Required</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for vendor in vendors %}
+        <tr>
+            <td>{{ vendor.name }}</td>
+            <td>{{ vendor.default_currency }}</td>
+            <td>{% if vendor.charges_gst %}<span class="badge badge-green">Yes</span>{% else %}<span class="badge badge-dim">No</span>{% endif %}</td>
+            <td>{% if vendor.api_available %}<span class="badge badge-green">Yes</span>{% else %}<span class="badge badge-dim">No</span>{% endif %}</td>
+            <td class="text-dim">{{ vendor.ato_category }}</td>
+            <td>{% if vendor.pdf_required %}<span class="badge badge-dim">Yes</span>{% else %}<span class="badge badge-dim">No</span>{% endif %}</td>
+            <td class="text-right"><a href="{{ url_for('vendors.edit_vendor', vendor_id=vendor.id) }}" class="btn btn-sm">Edit</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
 {% endblock %}

@@ -1,0 +1,327 @@
+/* Taxidermatt design system — phosphor green terminal aesthetic */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+:root {
+    --green:      #00FF41;
+    --green-dim:  #00CC33;
+    --green-dark: #004D14;
+    --bg:         #0A0F0A;
+    --bg-raised:  #111811;
+    --bg-card:    #0E150E;
+    --border:     #1A2E1A;
+    --text:       #00FF41;
+    --text-dim:   #4A7A4A;
+    --text-muted: #2A4A2A;
+    --danger:     #FF4141;
+    --warning:    #FFAA00;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* ── Layout ── */
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* ── Nav ── */
+nav {
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--bg-raised);
+}
+
+.nav-brand {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--green);
+    text-decoration: none;
+    margin-right: 32px;
+    letter-spacing: 0.05em;
+}
+
+.nav-brand::after { content: '█'; animation: blink 1s step-end infinite; }
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+nav a {
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 6px 14px;
+    font-size: 13px;
+    transition: color 0.15s;
+}
+
+nav a:hover { color: var(--green); }
+nav a.active { color: var(--green); }
+
+.nav-logout {
+    margin-left: auto;
+    color: var(--text-muted) !important;
+    font-size: 12px !important;
+}
+
+.nav-logout:hover { color: var(--danger) !important; }
+
+/* ── Page header ── */
+.page-header {
+    padding: 32px 0 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+}
+
+.page-header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--green);
+}
+
+.page-header .sub { color: var(--text-dim); font-size: 13px; }
+
+/* ── Cards ── */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--green);
+}
+
+.stat-value.warning { color: var(--warning); }
+
+/* ── Tables ── */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+th {
+    text-align: left;
+    padding: 8px 14px;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--border);
+}
+
+td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg-raised); }
+
+/* ── Badges ── */
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid currentColor;
+}
+
+.badge-green { color: var(--green); border-color: var(--green-dark); }
+.badge-dim   { color: var(--text-dim); border-color: var(--text-muted); }
+.badge-warn  { color: var(--warning); border-color: var(--warning); }
+
+/* ── Buttons ── */
+.btn {
+    display: inline-block;
+    padding: 8px 18px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    border: 1px solid var(--green);
+    background: transparent;
+    color: var(--green);
+    transition: background 0.15s, color 0.15s;
+}
+
+.btn:hover { background: var(--green); color: var(--bg); }
+
+.btn-sm {
+    padding: 4px 12px;
+    font-size: 12px;
+}
+
+.btn-danger {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.btn-danger:hover { background: var(--danger); color: var(--bg); }
+
+.btn-muted {
+    border-color: var(--text-muted);
+    color: var(--text-muted);
+}
+
+/* ── Forms ── */
+label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    margin-top: 18px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+input[type="number"],
+select,
+textarea {
+    width: 100%;
+    padding: 9px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    color: var(--green);
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--green-dim);
+}
+
+select option { background: var(--bg); }
+textarea { resize: vertical; min-height: 80px; }
+
+.form-actions {
+    margin-top: 24px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* ── Flash messages ── */
+.flash-list { list-style: none; margin-bottom: 20px; }
+
+.flash {
+    padding: 10px 16px;
+    border-left: 3px solid var(--green);
+    background: var(--green-dark);
+    color: var(--green);
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.flash.error { border-color: var(--danger); background: #2A0A0A; color: var(--danger); }
+
+/* ── Checkbox ── */
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.checkbox-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--green);
+}
+
+.checkbox-row label {
+    margin: 0;
+    text-transform: none;
+    font-size: 13px;
+    color: var(--text);
+    letter-spacing: 0;
+}
+
+/* ── Login page ── */
+.login-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 380px;
+    border: 1px solid var(--border);
+    padding: 40px;
+    background: var(--bg-card);
+}
+
+.login-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 6px;
+}
+
+.login-title::after { content: '█'; animation: blink 1s step-end infinite; }
+
+.login-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+}
+
+/* ── Utility ── */
+.mt-24 { margin-top: 24px; }
+.text-dim { color: var(--text-dim); }
+.text-muted { color: var(--text-muted); }
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.text-right { text-align: right; }
+.mono { font-family: 'IBM Plex Mono', monospace; }

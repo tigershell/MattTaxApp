@@ -1,5 +1,8 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_required
+from ..extensions import db
+from ..models.vendor import Vendor
+from ..models.expense import ATO_CATEGORIES
 
 vendors_bp = Blueprint("vendors", __name__)
 
@@ -7,5 +10,30 @@ vendors_bp = Blueprint("vendors", __name__)
 @vendors_bp.route("/vendors")
 @login_required
 def list_vendors():
-    """List all configured vendors — placeholder until M1."""
-    return render_template("vendors/list.html", vendors=[])
+    """List all configured vendors."""
+    vendors = Vendor.query.order_by(Vendor.name).all()
+    return render_template("vendors/list.html", vendors=vendors)
+
+
+@vendors_bp.route("/vendors/<int:vendor_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_vendor(vendor_id: int):
+    """Edit a vendor's configuration."""
+    vendor = Vendor.query.get_or_404(vendor_id)
+
+    if request.method == "POST":
+        vendor.default_currency = request.form["default_currency"]
+        vendor.charges_gst = "charges_gst" in request.form
+        vendor.ato_category = request.form["ato_category"]
+        vendor.sync_frequency = request.form["sync_frequency"]
+        vendor.pdf_required = "pdf_required" in request.form
+        vendor.notes = request.form.get("notes", "").strip() or None
+        db.session.commit()
+        flash(f"{vendor.name} updated.")
+        return redirect(url_for("vendors.list_vendors"))
+
+    return render_template(
+        "vendors/edit.html",
+        vendor=vendor,
+        ato_categories=ATO_CATEGORIES,
+    )

@@ -1,6 +1,51 @@
 {% extends "base.html" %}
 {% block title %}Financial Years — Taxidermatt{% endblock %}
 {% block content %}
-<h1>Financial Years</h1>
-<p>Financial year management coming in M1.</p>
+
+<div class="page-header">
+    <h1>Financial Years</h1>
+    <span class="sub">Australian FY runs 1 Jul – 30 Jun</span>
+</div>
+
+{% for fy in years %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 24px;">
+        <div>
+            <div style="font-size: 18px; font-weight: 600; color: var(--green); margin-bottom: 8px;">{{ fy.label }}</div>
+            <div class="text-dim" style="font-size: 13px;">
+                {{ fy.start_date.strftime('%d %b %Y') }} — {{ fy.end_date.strftime('%d %b %Y') }}
+            </div>
+            <div style="margin-top: 12px; font-size: 13px;">
+                {% if fy.gst_registration_date %}
+                    <span class="badge badge-green">GST registered from {{ fy.gst_registration_date.strftime('%d %b %Y') }}</span>
+                {% else %}
+                    <span class="badge badge-dim">Not GST registered</span>
+                {% endif %}
+            </div>
+        </div>
+        <div style="min-width: 280px;">
+            <form method="POST" action="{{ url_for('years.set_gst_date', year_id=fy.id) }}">
+                <label for="gst_date_{{ fy.id }}">GST Registration Date</label>
+                <input type="date"
+                       id="gst_date_{{ fy.id }}"
+                       name="gst_registration_date"
+                       value="{{ fy.gst_registration_date.isoformat() if fy.gst_registration_date else '' }}"
+                       min="{{ fy.start_date.isoformat() }}"
+                       max="{{ fy.end_date.isoformat() }}">
+                <div class="form-actions" style="margin-top: 12px;">
+                    <button type="submit" class="btn btn-sm">Save</button>
+                    {% if fy.gst_registration_date %}
+                    <button type="submit" name="gst_registration_date" value="" class="btn btn-sm btn-muted">Clear</button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% if not years %}
+<div class="card text-dim">No financial years found. Run <code>flask seed</code> to create the current year.</div>
+{% endif %}
+
 {% endblock %}

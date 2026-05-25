@@ -1,6 +1,35 @@
 {% extends "base.html" %}
 {% block title %}Dashboard — Taxidermatt{% endblock %}
 {% block content %}
-<h1>Dashboard</h1>
-<p>M0 scaffold complete. Data layer coming in M1.</p>
+
+<div class="page-header">
+    <h1>Dashboard</h1>
+    <span class="sub">{{ fy.label }}</span>
+</div>
+
+<div class="card-grid">
+    <div class="stat-card">
+        <div class="stat-label">Expenses this FY</div>
+        <div class="stat-value">{{ expense_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Total spend (AUD)</div>
+        <div class="stat-value">${{ "%.2f"|format(total_aud|float) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Invoices missing</div>
+        <div class="stat-value {% if unattached_count > 0 %}warning{% endif %}">{{ unattached_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">GST registered</div>
+        <div class="stat-value">{% if fy.gst_registration_date %}Yes{% else %}No{% endif %}</div>
+    </div>
+</div>
+
+<div style="display: flex; gap: 12px; flex-wrap: wrap;">
+    <a href="{{ url_for('expenses.list_expenses') }}" class="btn">View Expenses</a>
+    <a href="{{ url_for('years.list_years') }}" class="btn btn-muted">Financial Years</a>
+    <a href="{{ url_for('reports.report') }}" class="btn btn-muted">Tax Summary</a>
+</div>
+
 {% endblock %}

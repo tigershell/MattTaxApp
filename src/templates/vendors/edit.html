@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ vendor.name }} — Taxidermatt{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>{{ vendor.name }}</h1>
+    <span class="sub">Edit vendor config</span>
+</div>
+
+<div class="card" style="max-width: 560px;">
+<form method="POST">
+    <label for="default_currency">Default Currency</label>
+    <select id="default_currency" name="default_currency">
+        <option value="AUD" {% if vendor.default_currency == 'AUD' %}selected{% endif %}>AUD</option>
+        <option value="USD" {% if vendor.default_currency == 'USD' %}selected{% endif %}>USD</option>
+        <option value="EUR" {% if vendor.default_currency == 'EUR' %}selected{% endif %}>EUR</option>
+        <option value="GBP" {% if vendor.default_currency == 'GBP' %}selected{% endif %}>GBP</option>
+    </select>
+
+    <label for="ato_category">ATO Category</label>
+    <select id="ato_category" name="ato_category">
+        {% for cat in ato_categories %}
+        <option value="{{ cat }}" {% if vendor.ato_category == cat %}selected{% endif %}>{{ cat }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="sync_frequency">Sync Frequency</label>
+    <select id="sync_frequency" name="sync_frequency">
+        <option value="on_demand" {% if vendor.sync_frequency == 'on_demand' %}selected{% endif %}>On demand</option>
+        <option value="monthly" {% if vendor.sync_frequency == 'monthly' %}selected{% endif %}>Monthly</option>
+    </select>
+
+    <div class="checkbox-row">
+        <input type="checkbox" id="charges_gst" name="charges_gst" {% if vendor.charges_gst %}checked{% endif %}>
+        <label for="charges_gst">Vendor charges GST (10%)</label>
+    </div>
+
+    <div class="checkbox-row">
+        <input type="checkbox" id="pdf_required" name="pdf_required" {% if vendor.pdf_required %}checked{% endif %}>
+        <label for="pdf_required">PDF invoice required for ATO</label>
+    </div>
+
+    <label for="notes">Notes</label>
+    <textarea id="notes" name="notes">{{ vendor.notes or '' }}</textarea>
+
+    <div class="form-actions">
+        <button type="submit" class="btn">Save</button>
+        <a href="{{ url_for('vendors.list_vendors') }}" class="btn btn-muted">Cancel</a>
+    </div>
+</form>
+</div>
+
+{% endblock %}
