@@ -9,7 +9,7 @@
 
 <div class="card" style="max-width: 500px;">
     <form method="POST" enctype="multipart/form-data" action="{{ url_for('upload.upload') }}" id="upload-form">
-        <input type="file" id="invoice" name="invoice" accept=".pdf" required style="display:none;">
+        <input type="file" id="invoice" name="invoice" accept=".pdf" required multiple style="display:none;">
 
         <div id="drop-zone">
             <div id="drop-label">
@@ -70,15 +70,15 @@ const clearFile  = document.getElementById('clear-file');
 const submitBtn  = document.getElementById('submit-btn');
 const form       = document.getElementById('upload-form');
 
-function setFile(file) {
-    if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
-        alert('Please select a PDF file.');
-        return;
-    }
+function setFiles(files) {
+    const pdfs = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+    if (pdfs.length === 0) { alert('Please select PDF files only.'); return; }
     const dt = new DataTransfer();
-    dt.items.add(file);
+    pdfs.forEach(f => dt.items.add(f));
     fileInput.files = dt.files;
-    fileName.textContent = file.name;
+    fileName.textContent = pdfs.length === 1
+        ? pdfs[0].name
+        : `${pdfs.length} files: ${pdfs.map(f => f.name).join(', ')}`;
     dropLabel.style.display = 'none';
     fileChosen.style.display = 'block';
     dropZone.classList.add('has-file');
@@ -98,7 +98,7 @@ browseLink.addEventListener('click', (e) => { e.stopPropagation(); fileInput.cli
 clearFile.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); clearSelection(); });
 
 fileInput.addEventListener('change', () => {
-    if (fileInput.files[0]) setFile(fileInput.files[0]);
+    if (fileInput.files.length) setFiles(fileInput.files);
 });
 
 dropZone.addEventListener('dragover', (e) => {
@@ -109,8 +109,7 @@ dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover
 dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
     dropZone.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file) setFile(file);
+    if (e.dataTransfer.files.length) setFiles(e.dataTransfer.files);
 });
 
 form.addEventListener('submit', () => {

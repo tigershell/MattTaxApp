@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 EXTRACTION_PROMPT = """You are extracting data from an Australian business tax invoice.
 Return ONLY a JSON object with these exact keys:
 - vendor: the company or supplier name
+- invoice_number: the invoice number or reference (e.g. "INV-1234", "2024-00042"), or null if not shown
 - invoice_date: the invoice date in YYYY-MM-DD format
 - amount_original: the total amount charged as a number (no currency symbol)
 - currency: the currency code, e.g. "AUD" or "USD"

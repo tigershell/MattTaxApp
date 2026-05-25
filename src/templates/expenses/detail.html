@@ -41,6 +41,10 @@
 <div class="card" style="max-width: 800px; margin-bottom: 24px;">
     <table style="width: 100%; border-collapse: collapse;">
         <tr>
+            <td class="text-dim" style="padding: 8px 0; width: 180px; font-size: 13px;">Invoice Number</td>
+            <td style="padding: 8px 0;">{{ expense.invoice_number or '—' }}</td>
+        </tr>
+        <tr>
             <td class="text-dim" style="padding: 8px 0; width: 180px; font-size: 13px;">ATO Category</td>
             <td style="padding: 8px 0;">{{ expense.ato_category }}</td>
         </tr>

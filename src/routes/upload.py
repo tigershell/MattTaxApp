@@ -52,57 +52,81 @@ def _match_vendor(extracted_name: str | None) -> int | None:
     return None
 
 
+def _extract_and_show_confirm(pdf_bytes: bytes, filename: str, queue_remaining: int):
+    """Extract data from a PDF and render the confirm form.
+
+    Args:
+        pdf_bytes: Raw PDF content.
+        filename: Original filename for display.
+        queue_remaining: How many files are left after this one (for progress display).
+    """
+    vendors = Vendor.query.order_by(Vendor.name).all()
+    extracted = {}
+    extraction_error = None
+    try:
+        extractor = PDFExtractor(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        extracted = extractor.extract(pdf_bytes)
+        if not extracted:
+            extraction_error = "Claude could not extract data from this PDF. Please fill in the fields manually."
+    except Exception as e:
+        logger.error("PDF extraction failed: %s", e)
+        extraction_error = f"Extraction error: {e}. Please fill in the fields manually."
+
+    if extraction_error:
+        flash(extraction_error, "error")
+
+    matched_vendor_id = _match_vendor(extracted.get("vendor"))
+    return render_template(
+        "upload/confirm.html",
+        extracted=extracted,
+        filename=filename,
+        vendors=vendors,
+        ato_categories=ATO_CATEGORIES,
+        matched_vendor_id=matched_vendor_id,
+        queue_remaining=queue_remaining,
+    )
+
+
 @upload_bp.route("/upload", methods=["GET", "POST"])
 @login_required
 def upload():
-    """Step 1: receive PDF, extract data, show confirmation form."""
-    vendors = Vendor.query.order_by(Vendor.name).all()
-
+    """Step 1: receive one or more PDFs, queue them, extract and show first confirm form."""
     if request.method == "POST":
-        pdf_file = request.files.get("invoice")
-        if not pdf_file or not pdf_file.filename.lower().endswith(".pdf"):
-            flash("Please upload a PDF file.", "error")
+        pdf_files = request.files.getlist("invoice")
+        pdf_files = [f for f in pdf_files if f and f.filename.lower().endswith(".pdf")]
+
+        if not pdf_files:
+            flash("Please upload at least one PDF file.", "error")
             return redirect(url_for("upload.upload"))
 
-        pdf_bytes = pdf_file.read()
-        if len(pdf_bytes) == 0:
-            flash("The uploaded file is empty.", "error")
+        # Write all PDFs to temp files and build the queue
+        queue = []
+        for f in pdf_files:
+            pdf_bytes = f.read()
+            if len(pdf_bytes) == 0:
+                flash(f"Skipped empty file: {f.filename}", "error")
+                continue
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+            tmp.write(pdf_bytes)
+            tmp.close()
+            queue.append({"path": tmp.name, "filename": f.filename})
+
+        if not queue:
+            flash("No valid PDF files found.", "error")
             return redirect(url_for("upload.upload"))
 
-        # Write PDF to a temp file so we can retrieve it at the confirm step
-        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-        tmp.write(pdf_bytes)
-        tmp.close()
-        session["pending_pdf_path"] = tmp.name
-        session["pending_filename"] = pdf_file.filename
+        # Store remaining files (all but the first) in the session queue
+        session["upload_queue"] = queue[1:]
+        first = queue[0]
+        session["pending_pdf_path"] = first["path"]
+        session["pending_filename"] = first["filename"]
 
-        # Extract structured data from the PDF
-        extracted = {}
-        extraction_error = None
-        try:
-            extractor = PDFExtractor(api_key=os.getenv("ANTHROPIC_API_KEY"))
-            extracted = extractor.extract(pdf_bytes)
-            if not extracted:
-                extraction_error = "Claude could not extract data from this PDF. Please fill in the fields manually."
-        except Exception as e:
-            logger.error("PDF extraction failed: %s", e)
-            extraction_error = f"Extraction error: {e}. Please fill in the fields manually."
+        with open(first["path"], "rb") as fh:
+            pdf_bytes = fh.read()
 
-        if extraction_error:
-            flash(extraction_error, "error")
+        return _extract_and_show_confirm(pdf_bytes, first["filename"], len(queue) - 1)
 
-        matched_vendor_id = _match_vendor(extracted.get("vendor"))
-
-        return render_template(
-            "upload/confirm.html",
-            extracted=extracted,
-            filename=pdf_file.filename,
-            vendors=vendors,
-            ato_categories=ATO_CATEGORIES,
-            matched_vendor_id=matched_vendor_id,
-        )
-
-    return render_template("upload/index.html", vendors=vendors)
+    return render_template("upload/index.html")
 
 
 @upload_bp.route("/upload/confirm", methods=["POST"])
@@ -126,6 +150,7 @@ def confirm():
         amount_original = Decimal(request.form["amount_original"])
         currency = request.form["currency"].upper().strip()
         ato_category = request.form["ato_category"]
+        invoice_number = request.form.get("invoice_number", "").strip() or None
         description = request.form.get("description", "").strip() or None
         notes = request.form.get("notes", "").strip() or None
         gst_amount_str = request.form.get("gst_amount", "").strip()
@@ -221,6 +246,7 @@ def confirm():
         amount_aud=amount_aud,
         gst_amount=gst_amount,
         ato_category=ato_category,
+        invoice_number=invoice_number,
         description=description,
         notes=notes,
         pdf_data=pdf_bytes,
@@ -231,4 +257,16 @@ def confirm():
     db.session.commit()
 
     flash(f"Expense saved — ${amount_aud:,.2f} AUD ({vendor.name}, {invoice_date}).")
+
+    # Advance the queue: if more files are waiting, process the next one
+    queue = session.get("upload_queue", [])
+    if queue:
+        next_item = queue.pop(0)
+        session["upload_queue"] = queue
+        session["pending_pdf_path"] = next_item["path"]
+        session["pending_filename"] = next_item["filename"]
+        with open(next_item["path"], "rb") as fh:
+            next_bytes = fh.read()
+        return _extract_and_show_confirm(next_bytes, next_item["filename"], len(queue))
+
     return redirect(url_for("expenses.detail", expense_id=expense.id))

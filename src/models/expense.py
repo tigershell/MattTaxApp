@@ -44,6 +44,9 @@ class Expense(db.Model):
     amount_aud = db.Column(db.Numeric(10, 2), nullable=False)        # Always in AUD
     gst_amount = db.Column(db.Numeric(10, 2), nullable=True)         # GST component if applicable
 
+    # Invoice reference
+    invoice_number = db.Column(db.String(100), nullable=True)
+
     # Classification
     ato_category = db.Column(db.String(100), nullable=False, default="Software & Subscriptions")
     description = db.Column(db.Text, nullable=True)

@@ -23,36 +23,45 @@
 </div>
 
 {% if expenses %}
+
+<div style="max-width: 400px; margin-bottom: 16px;">
+    <input type="text" id="vendor-search"
+           placeholder="Search date, invoice #, amount..."
+           style="width: 100%;" autocomplete="off">
+</div>
+
 <div class="card" style="margin-bottom: 24px;">
 <table>
     <thead>
         <tr>
             <th>Date</th>
+            <th>Invoice #</th>
             <th>Amount (AUD)</th>
-            <th>Currency</th>
+            <th>Original</th>
             <th>Description</th>
-            <th>Invoice</th>
+            <th>PDF</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
     {% for e in expenses %}
-        <tr>
+        <tr data-search="{{ [e.formatted_date(), e.invoice_number or '', '%.2f'|format(e.amount_aud|float), e.description or ''] | join(' ') | lower }}">
             <td>{{ e.formatted_date() }}</td>
+            <td class="text-dim">{{ e.invoice_number or '—' }}</td>
             <td>{{ e.formatted_amount() }}</td>
             <td class="text-dim">
                 {% if e.currency != 'AUD' %}
                     {{ e.currency }} {{ "%.2f"|format(e.amount_original) }}
                 {% else %}
-                    AUD
+                    —
                 {% endif %}
             </td>
             <td class="text-dim">{{ e.description or '—' }}</td>
             <td>
                 {% if e.invoice_attached %}
-                    <span class="badge badge-green">Attached</span>
+                    <span class="badge badge-green">Yes</span>
                 {% else %}
-                    <span class="badge badge-dim">Missing</span>
+                    <span class="badge badge-dim">No</span>
                 {% endif %}
             </td>
             <td class="text-right">
@@ -63,6 +72,20 @@
     </tbody>
 </table>
 </div>
+
+<script>
+const si = document.getElementById('vendor-search');
+if (si) {
+    si.addEventListener('input', function() {
+        const term = this.value.toLowerCase().trim();
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.style.display = !term || row.dataset.search.includes(term) ? '' : 'none';
+        });
+    });
+    si.focus();
+}
+</script>
+
 {% else %}
 <div class="card text-dim" style="margin-bottom: 24px;">No expenses recorded for {{ vendor.name }} yet.</div>
 {% endif %}

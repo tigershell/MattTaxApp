@@ -4,7 +4,12 @@
 
 <div class="page-header">
     <h1>Expenses</h1>
-    <span class="sub">{{ fy.label }} &mdash; {{ expenses|length }} record(s)</span>
+    <span class="sub">{{ fy.label }} &mdash; <span id="visible-count">{{ expenses|length }}</span> record(s)</span>
+</div>
+
+<div style="max-width: 400px; margin-bottom: 16px;">
+    <input type="text" id="expense-search" placeholder="Search vendor, invoice #, category..."
+           style="width: 100%;" autocomplete="off">
 </div>
 
 {% if expenses %}
@@ -14,8 +19,8 @@
         <tr>
             <th>Date</th>
             <th>Vendor</th>
+            <th>Invoice #</th>
             <th>Category</th>
-            <th>Currency</th>
             <th>Amount (AUD)</th>
             <th>Invoice</th>
             <th></th>
@@ -23,11 +28,11 @@
     </thead>
     <tbody>
         {% for e in expenses %}
-        <tr>
+        <tr data-search="{{ [e.vendor.name, e.invoice_number or '', e.ato_category, e.description or ''] | join(' ') | lower }}">
             <td>{{ e.formatted_date() }}</td>
             <td>{{ e.vendor.name }}</td>
+            <td class="text-dim">{{ e.invoice_number or '—' }}</td>
             <td class="text-dim">{{ e.ato_category }}</td>
-            <td class="text-dim">{{ e.currency }}</td>
             <td>{{ e.formatted_amount() }}</td>
             <td>
                 {% if e.invoice_attached %}
@@ -49,5 +54,24 @@
     No expenses yet for {{ fy.label }}. Upload an invoice to get started.
 </div>
 {% endif %}
+
+<script>
+const searchInput = document.getElementById('expense-search');
+const visibleCount = document.getElementById('visible-count');
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        const term = this.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('tbody tr');
+        let visible = 0;
+        rows.forEach(row => {
+            const match = !term || row.dataset.search.includes(term);
+            row.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+        visibleCount.textContent = visible;
+    });
+    searchInput.focus();
+}
+</script>
 
 {% endblock %}

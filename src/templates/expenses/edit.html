@@ -20,6 +20,10 @@
         {% endfor %}
     </select>
 
+    <label for="invoice_number">Invoice Number</label>
+    <input type="text" id="invoice_number" name="invoice_number"
+           value="{{ expense.invoice_number or '' }}" maxlength="100">
+
     <label for="invoice_date">Invoice Date</label>
     <input type="date" id="invoice_date" name="invoice_date"
            value="{{ expense.invoice_date.isoformat() }}" required>

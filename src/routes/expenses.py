@@ -50,6 +50,7 @@ def edit(expense_id: int):
             expense.amount_original = Decimal(request.form["amount_original"])
             expense.amount_aud = Decimal(request.form["amount_aud"])
             expense.ato_category = request.form["ato_category"]
+            expense.invoice_number = request.form.get("invoice_number", "").strip() or None
             expense.description = request.form.get("description", "").strip() or None
             expense.notes = request.form.get("notes", "").strip() or None
             gst_str = request.form.get("gst_amount", "").strip()

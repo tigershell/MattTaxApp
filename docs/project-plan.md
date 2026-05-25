@@ -62,24 +62,34 @@ The existing scaffold (from the initial commit) gives us a head start — `creat
 
 ---
 
-### Milestone 2: PDF Upload + Expense Capture
+### Milestone 2: PDF Upload + Expense Capture ✅ COMPLETE
 **Goal:** Drop a PDF → Claude extracts structured data → user reviews and confirms → expense saved to DB. Core workflow end-to-end.
 
-| # | Task | Why | Outputs | Size |
-|---|------|-----|---------|------|
-| 2.1 | Register for exchangeratesapi.com.au free API key; add `RBA_API_KEY` to `.env` and `.env.example` | Needed before any USD expense can be saved | API key obtained | S |
-| 2.2 | Write `src/api_clients/rba_client.py` — `RBAClient` class: `get_rate(date, currency)` → checks `RBARate` cache first, fetches from API on miss, saves to cache | Every USD expense needs a rate; caching protects the free tier | `rba_client.py` | M |
-| 2.3 | Write `src/logic/currency_converter.py` — `CurrencyConverter` class: `convert(amount, currency, date)` → returns `(aud_amount, rate_used)`; `manual_override(amount, rate)` for fallback | USD→AUD conversion is needed at PDF save time | `currency_converter.py` | S |
-| 2.4 | Write tests for `CurrencyConverter` — test with a known RBA rate for a real historical date | Currency conversion is a calculation that must be correct | `tests/test_currency_converter.py` | S |
-| 2.5 | Design the PDF extraction prompt for `PDFExtractor` — test it against the three real invoice PDFs in the project root before writing any code | The prompt is the most important part; get it right before wiring it up | Prompt text documented in `docs/api_notes.md` | M |
-| 2.6 | Write `src/api_clients/pdf_extractor.py` — `PDFExtractor` class: `extract(pdf_bytes)` → base64 encode → send to `claude-opus-4-7` → parse response → return dict | Core AI extraction class | `pdf_extractor.py` | M |
-| 2.7 | Write `src/logic/duplicate_detector.py` — `DuplicateDetector` class: `find_match(vendor_id, date, amount)` → query Expense table with ±1 day / ±$0.01 tolerance | Prevents duplicate records when PDF is uploaded after an API sync | `duplicate_detector.py` | S |
-| 2.8 | Write tests for `DuplicateDetector` — test exact match, near match (within tolerance), and no match cases | Logic must be correct or expenses will be duplicated or missed | `tests/test_duplicate_detector.py` | S |
-| 2.9 | Build the upload route — `POST /upload` receives PDF file, calls `PDFExtractor.extract()`, renders confirmation page with extracted data pre-filled in an editable form | User must review before saving; never auto-commit extraction results | `routes/expenses.py` or `routes/upload.py`, `templates/upload/index.html` updated | M |
-| 2.10 | Build the upload confirm route — `POST /upload/confirm` receives the confirmed form data, calls `DuplicateDetector`, calls `CurrencyConverter` if needed, saves `Expense` | Commits the expense to DB after user review | Confirm route + `templates/upload/confirm.html` | M |
-| 2.11 | Handle extraction errors gracefully — if Claude returns unparseable output, show the raw text alongside an empty editable form so Matt can enter the data manually | Low-quality PDFs or unusual layouts will occasionally fail | Error state in upload template | S |
-| 2.12 | Test end-to-end with each of the three real invoice PDFs in the project root | Real invoices are the only meaningful test | Manual test, note results in `docs/api_notes.md` | S |
-| 2.13 | Commit: `feat: PDF upload and expense capture — Claude extraction, currency conversion, duplicate detection` | Milestone checkpoint | Git commit + tag `v0.1.0-m2` | S |
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 2.1 | Exchange rate API setup | ✅ | Switched from exchangeratesapi.com.au (paid) to Frankfurter (free, ECB rates). See `docs/logic.md`. |
+| 2.2 | `RBAClient` / exchange rate fetch with DB cache | ✅ | Uses Frankfurter. No API key required. |
+| 2.3 | `CurrencyConverter` with manual override | ✅ | |
+| 2.4 | `CurrencyConverter` tests | ✅ | 4 tests passing |
+| 2.5 | PDF extraction prompt design | ✅ | Extracts: vendor, invoice_number, date, amount, currency, GST, ATO category, description |
+| 2.6 | `PDFExtractor` class | ✅ | Uses `claude-opus-4-7` with base64 PDF document |
+| 2.7 | `DuplicateDetector` class | ✅ | ±1 day / ±$0.01 AUD tolerance |
+| 2.8 | `DuplicateDetector` tests | ✅ | 6 tests passing |
+| 2.9 | Upload route with drag-and-drop, multi-file queue | ✅ | Session-based queue for batch uploads |
+| 2.10 | Upload confirm route | ✅ | Currency conversion, duplicate detection, new vendor creation inline |
+| 2.11 | Extraction error handling | ✅ | Flash message + manual entry fallback |
+| 2.12 | End-to-end test with real invoices | ✅ | Tested with Fal.ai, Railway, Namecheap PDFs |
+| 2.13 | Commit + tag | ✅ | `v0.1.0-m2` tagged |
+
+**Additional features built during M2:**
+- Expense edit and delete
+- Vendor detail page with spend summary and search
+- Vendor billing URL field
+- Dashboard P&L breakdown (spend by category + vendor)
+- Invoice number field (extracted + stored)
+- Client-side search on expenses list and vendor detail
+- Token-based vendor matching for legal name variations
+- Improved duplicate handling (blocks re-upload if PDF already attached)
 
 **Estimated total:** ~8–12 hours
 **Dependency:** M1 complete. RBA API key obtained (2.1).
