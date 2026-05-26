@@ -72,6 +72,46 @@ class PDFExtractor:
             logger.error("Unexpected error during PDF extraction: %s", e)
             return {}
 
+    def extract_image(self, image_bytes: bytes, media_type: str) -> dict:
+        """Extract invoice fields from an image (JPEG or PNG).
+
+        Args:
+            image_bytes: Raw bytes of the image file.
+            media_type: MIME type — "image/jpeg" or "image/png".
+
+        Returns:
+            Same dict shape as extract(). Returns empty dict on failure.
+        """
+        try:
+            encoded = base64.standard_b64encode(image_bytes).decode("utf-8")
+            message = self._client.messages.create(
+                model="claude-opus-4-7",
+                max_tokens=512,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": media_type,
+                                    "data": encoded,
+                                },
+                            },
+                            {"type": "text", "text": EXTRACTION_PROMPT},
+                        ],
+                    }
+                ],
+            )
+            return self._parse_response(message.content[0].text)
+        except anthropic.APIError as e:
+            logger.error("Anthropic API error during image extraction: %s", e)
+            return {}
+        except Exception as e:
+            logger.error("Unexpected error during image extraction: %s", e)
+            return {}
+
     def _encode_pdf(self, pdf_bytes: bytes) -> str:
         """Base64-encode PDF bytes for the API request."""
         return base64.standard_b64encode(pdf_bytes).decode("utf-8")

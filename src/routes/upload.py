@@ -21,6 +21,24 @@ logger = logging.getLogger(__name__)
 
 upload_bp = Blueprint("upload", __name__)
 
+ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
+
+_MEDIA_TYPE_MAP = {
+    "pdf": "application/pdf",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "png": "image/png",
+}
+
+
+def _media_type(filename: str) -> str:
+    ext = filename.lower().rsplit(".", 1)[-1] if "." in filename else ""
+    return _MEDIA_TYPE_MAP.get(ext, "application/pdf")
+
+
+def _file_ext(filename: str) -> str:
+    return "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ".pdf"
+
 
 def _tokenize(text: str) -> set[str]:
     """Split a vendor name into lowercase alphanumeric tokens, min 3 chars."""
@@ -52,12 +70,13 @@ def _match_vendor(extracted_name: str | None) -> int | None:
     return None
 
 
-def _extract_and_show_confirm(pdf_bytes: bytes, filename: str, queue_remaining: int):
-    """Extract data from a PDF and render the confirm form.
+def _extract_and_show_confirm(file_bytes: bytes, filename: str, media_type: str, queue_remaining: int):
+    """Extract data from a PDF or image and render the confirm form.
 
     Args:
-        pdf_bytes: Raw PDF content.
+        file_bytes: Raw file content.
         filename: Original filename for display.
+        media_type: MIME type of the file (application/pdf, image/jpeg, image/png).
         queue_remaining: How many files are left after this one (for progress display).
     """
     vendors = Vendor.query.order_by(Vendor.name).all()
@@ -65,11 +84,14 @@ def _extract_and_show_confirm(pdf_bytes: bytes, filename: str, queue_remaining: 
     extraction_error = None
     try:
         extractor = PDFExtractor(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        extracted = extractor.extract(pdf_bytes)
+        if media_type == "application/pdf":
+            extracted = extractor.extract(file_bytes)
+        else:
+            extracted = extractor.extract_image(file_bytes, media_type)
         if not extracted:
-            extraction_error = "Claude could not extract data from this PDF. Please fill in the fields manually."
+            extraction_error = "Claude could not extract data from this file. Please fill in the fields manually."
     except Exception as e:
-        logger.error("PDF extraction failed: %s", e)
+        logger.error("Extraction failed: %s", e)
         extraction_error = f"Extraction error: {e}. Please fill in the fields manually."
 
     if extraction_error:
@@ -90,29 +112,37 @@ def _extract_and_show_confirm(pdf_bytes: bytes, filename: str, queue_remaining: 
 @upload_bp.route("/upload", methods=["GET", "POST"])
 @login_required
 def upload():
-    """Step 1: receive one or more PDFs, queue them, extract and show first confirm form."""
+    """Step 1: receive one or more PDFs/images, queue them, extract and show first confirm form."""
     if request.method == "POST":
-        pdf_files = request.files.getlist("invoice")
-        pdf_files = [f for f in pdf_files if f and f.filename.lower().endswith(".pdf")]
+        all_files = request.files.getlist("invoice")
+        valid_files = [
+            f for f in all_files
+            if f and any(f.filename.lower().endswith(ext) for ext in ALLOWED_EXTENSIONS)
+        ]
 
-        if not pdf_files:
-            flash("Please upload at least one PDF file.", "error")
+        if not valid_files:
+            flash("Please upload PDF, JPG, or PNG files.", "error")
             return redirect(url_for("upload.upload"))
 
-        # Write all PDFs to temp files and build the queue
+        # Write files to temp storage and build the queue
         queue = []
-        for f in pdf_files:
-            pdf_bytes = f.read()
-            if len(pdf_bytes) == 0:
+        for f in valid_files:
+            file_bytes = f.read()
+            if len(file_bytes) == 0:
                 flash(f"Skipped empty file: {f.filename}", "error")
                 continue
-            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-            tmp.write(pdf_bytes)
+            ext = _file_ext(f.filename)
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+            tmp.write(file_bytes)
             tmp.close()
-            queue.append({"path": tmp.name, "filename": f.filename})
+            queue.append({
+                "path": tmp.name,
+                "filename": f.filename,
+                "media_type": _media_type(f.filename),
+            })
 
         if not queue:
-            flash("No valid PDF files found.", "error")
+            flash("No valid files found.", "error")
             return redirect(url_for("upload.upload"))
 
         # Store remaining files (all but the first) in the session queue
@@ -120,11 +150,12 @@ def upload():
         first = queue[0]
         session["pending_pdf_path"] = first["path"]
         session["pending_filename"] = first["filename"]
+        session["pending_media_type"] = first["media_type"]
 
         with open(first["path"], "rb") as fh:
-            pdf_bytes = fh.read()
+            file_bytes = fh.read()
 
-        return _extract_and_show_confirm(pdf_bytes, first["filename"], len(queue) - 1)
+        return _extract_and_show_confirm(file_bytes, first["filename"], first["media_type"], len(queue) - 1)
 
     return render_template("upload/index.html")
 
@@ -135,6 +166,7 @@ def confirm():
     """Step 2: user has reviewed the extracted data — save the expense."""
     pdf_path = session.pop("pending_pdf_path", None)
     filename = session.pop("pending_filename", "invoice.pdf")
+    session.pop("pending_media_type", None)
 
     # Read and clean up the temp PDF file
     pdf_bytes = None
@@ -265,8 +297,9 @@ def confirm():
         session["upload_queue"] = queue
         session["pending_pdf_path"] = next_item["path"]
         session["pending_filename"] = next_item["filename"]
+        session["pending_media_type"] = next_item["media_type"]
         with open(next_item["path"], "rb") as fh:
             next_bytes = fh.read()
-        return _extract_and_show_confirm(next_bytes, next_item["filename"], len(queue))
+        return _extract_and_show_confirm(next_bytes, next_item["filename"], next_item["media_type"], len(queue))
 
     return redirect(url_for("expenses.detail", expense_id=expense.id))

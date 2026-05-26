@@ -9,12 +9,12 @@
 
 <div class="card" style="max-width: 500px;">
     <form method="POST" enctype="multipart/form-data" action="{{ url_for('upload.upload') }}" id="upload-form">
-        <input type="file" id="invoice" name="invoice" accept=".pdf" required multiple style="display:none;">
+        <input type="file" id="invoice" name="invoice" accept=".pdf,.jpg,.jpeg,.png" required multiple style="display:none;">
 
         <div id="drop-zone">
             <div id="drop-label">
                 <span id="drop-icon">&#8659;</span>
-                <span id="drop-text">Drop PDF here</span>
+                <span id="drop-text">Drop PDF or image here</span>
                 <span id="drop-sub">or <a href="#" id="browse-link">browse</a></span>
             </div>
             <div id="file-chosen" style="display:none;">
@@ -70,15 +70,18 @@ const clearFile  = document.getElementById('clear-file');
 const submitBtn  = document.getElementById('submit-btn');
 const form       = document.getElementById('upload-form');
 
+const ALLOWED_EXTS = ['.pdf', '.jpg', '.jpeg', '.png'];
+function isAllowed(name) { return ALLOWED_EXTS.some(ext => name.toLowerCase().endsWith(ext)); }
+
 function setFiles(files) {
-    const pdfs = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
-    if (pdfs.length === 0) { alert('Please select PDF files only.'); return; }
+    const valid = Array.from(files).filter(f => isAllowed(f.name));
+    if (valid.length === 0) { alert('Please select PDF, JPG, or PNG files.'); return; }
     const dt = new DataTransfer();
-    pdfs.forEach(f => dt.items.add(f));
+    valid.forEach(f => dt.items.add(f));
     fileInput.files = dt.files;
-    fileName.textContent = pdfs.length === 1
-        ? pdfs[0].name
-        : `${pdfs.length} files: ${pdfs.map(f => f.name).join(', ')}`;
+    fileName.textContent = valid.length === 1
+        ? valid[0].name
+        : `${valid.length} files: ${valid.map(f => f.name).join(', ')}`;
     dropLabel.style.display = 'none';
     fileChosen.style.display = 'block';
     dropZone.classList.add('has-file');

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}New Vendor — Taxidermatt{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>New Vendor</h1>
+    <span class="sub">Add a vendor to your list</span>
+</div>
+
+<div class="card" style="max-width: 560px;">
+<form method="POST" action="{{ url_for('vendors.new_vendor') }}">
+
+    <label for="name">Vendor Name</label>
+    <input type="text" id="name" name="name" maxlength="100" required autofocus>
+
+    <label for="default_currency">Default Currency</label>
+    <select id="default_currency" name="default_currency">
+        <option value="AUD" selected>AUD</option>
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+        <option value="GBP">GBP</option>
+    </select>
+
+    <label for="ato_category">ATO Category</label>
+    <select id="ato_category" name="ato_category">
+        {% for cat in ato_categories %}
+        <option value="{{ cat }}">{{ cat }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="sync_frequency">Sync Frequency</label>
+    <select id="sync_frequency" name="sync_frequency">
+        <option value="on_demand" selected>On demand</option>
+        <option value="monthly">Monthly</option>
+    </select>
+
+    <div class="checkbox-row">
+        <input type="checkbox" id="charges_gst" name="charges_gst">
+        <label for="charges_gst">Vendor charges GST (10%)</label>
+    </div>
+
+    <div class="checkbox-row">
+        <input type="checkbox" id="pdf_required" name="pdf_required">
+        <label for="pdf_required">PDF invoice required for ATO</label>
+    </div>
+
+    <label for="billing_url">Billing URL (optional)</label>
+    <input type="url" id="billing_url" name="billing_url" placeholder="https://...">
+
+    <label for="notes">Notes (optional)</label>
+    <textarea id="notes" name="notes"></textarea>
+
+    <div class="form-actions">
+        <button type="submit" class="btn">Create Vendor</button>
+        <a href="{{ url_for('vendors.list_vendors') }}" class="btn btn-muted">Cancel</a>
+    </div>
+</form>
+</div>
+
+{% endblock %}

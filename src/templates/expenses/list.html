@@ -5,6 +5,7 @@
 <div class="page-header">
     <h1>Expenses</h1>
     <span class="sub">{{ fy.label }} &mdash; <span id="visible-count">{{ expenses|length }}</span> record(s)</span>
+    <a href="{{ url_for('expenses.new') }}" class="btn btn-muted" style="margin-left: auto;">+ New Expense</a>
 </div>
 
 <div style="max-width: 400px; margin-bottom: 16px;">

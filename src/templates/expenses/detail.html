@@ -84,7 +84,7 @@
 {% if expense.invoice_attached %}
 <div class="card" style="max-width: 800px; margin-bottom: 24px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <span style="font-size: 13px; color: var(--green-dim);">INVOICE PDF</span>
+        <span style="font-size: 13px; color: var(--green-dim);">INVOICE</span>
         <a href="{{ url_for('expenses.serve_pdf', expense_id=expense.id) }}"
            target="_blank" class="btn btn-muted" style="font-size: 12px; padding: 4px 12px;">
             Open in new tab

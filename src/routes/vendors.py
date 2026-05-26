@@ -37,6 +37,37 @@ def vendor_detail(vendor_id: int):
     )
 
 
+@vendors_bp.route("/vendors/new", methods=["GET", "POST"])
+@login_required
+def new_vendor():
+    """Create a new vendor from scratch."""
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        if not name:
+            flash("Vendor name is required.", "error")
+            return render_template("vendors/new.html", ato_categories=ATO_CATEGORIES)
+        if Vendor.query.filter_by(name=name).first():
+            flash(f"A vendor named '{name}' already exists.", "error")
+            return render_template("vendors/new.html", ato_categories=ATO_CATEGORIES)
+        vendor = Vendor(
+            name=name,
+            default_currency=request.form.get("default_currency", "AUD"),
+            ato_category=request.form.get("ato_category", ATO_CATEGORIES[0]),
+            charges_gst="charges_gst" in request.form,
+            api_available=False,
+            sync_frequency=request.form.get("sync_frequency", "on_demand"),
+            pdf_required="pdf_required" in request.form,
+            billing_url=request.form.get("billing_url", "").strip() or None,
+            notes=request.form.get("notes", "").strip() or None,
+        )
+        db.session.add(vendor)
+        db.session.commit()
+        flash(f"Vendor '{vendor.name}' created.")
+        return redirect(url_for("vendors.vendor_detail", vendor_id=vendor.id))
+
+    return render_template("vendors/new.html", ato_categories=ATO_CATEGORIES)
+
+
 @vendors_bp.route("/vendors/<int:vendor_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_vendor(vendor_id: int):
