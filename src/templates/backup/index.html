@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Backup — Taxidermatt{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>Backup &amp; Restore</h1>
+    <span class="sub">Protect your records — download a copy you can keep safe</span>
+</div>
+
+<div class="card" style="max-width: 760px; margin-bottom: 24px;">
+    <div class="text-dim" style="font-size: 11px; margin-bottom: 12px;">CREATE A BACKUP</div>
+    <p style="margin-bottom: 16px;">
+        This downloads a complete copy of your database (all expenses, income, and attached
+        invoices) and also keeps a copy on this machine. Store the downloaded file somewhere
+        safe — ideally cloud storage or another drive, so it survives if this drive fails.
+    </p>
+    <a href="{{ url_for('backup.download_new') }}" class="btn">⬇ Download backup now</a>
+</div>
+
+<div class="card" style="max-width: 760px;">
+    <div class="text-dim" style="font-size: 11px; margin-bottom: 16px;">BACKUPS ON THIS MACHINE</div>
+    {% if backups %}
+    <table>
+        <thead>
+            <tr><th>File</th><th>When</th><th>Size</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for b in backups %}
+            <tr>
+                <td>{{ b.name }}</td>
+                <td class="text-dim">{{ b.modified }}</td>
+                <td class="text-dim">{{ b.size }}</td>
+                <td class="text-right" style="white-space: nowrap;">
+                    <a href="{{ url_for('backup.download_existing', filename=b.name) }}" class="btn btn-sm">Download</a>
+                    <form method="POST" action="{{ url_for('backup.restore') }}" style="display:inline;"
+                          onsubmit="return confirm('Restore from {{ b.name }}? Your current data is saved to a new backup first, so you can undo this.');">
+                        <input type="hidden" name="filename" value="{{ b.name }}">
+                        <button type="submit" class="btn btn-sm btn-muted">Restore</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p class="text-muted" style="font-size: 12px; margin-top: 12px;">
+        Restoring snapshots your current database first, so it can never lose your present data.
+    </p>
+    {% else %}
+    <p class="text-dim">No backups yet. Click “Download backup now” above to create your first one.</p>
+    {% endif %}
+</div>
+
+{% endblock %}
