@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Edit Income — Taxidermatt{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>Edit Income</h1>
+    <span class="sub">#{{ record.id }} — {{ record.formatted_date() }}</span>
+</div>
+
+<div class="card" style="max-width: 600px;">
+<form method="POST" action="{{ url_for('income.edit', income_id=record.id) }}">
+
+    <label for="source">Source</label>
+    <select id="source" name="source">
+        {% for s in sources %}
+        <option value="{{ s.value }}"{% if s == record.source %} selected{% endif %}>{{ s.value.replace('_', ' ')|title }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="source_name">Paid By / Platform</label>
+    <input type="text" id="source_name" name="source_name" maxlength="150"
+           value="{{ record.source_name or '' }}">
+
+    <label for="invoice_number">Invoice Number</label>
+    <input type="text" id="invoice_number" name="invoice_number" maxlength="100"
+           value="{{ record.invoice_number or '' }}">
+
+    <label for="received_date">Date Received</label>
+    <input type="date" id="received_date" name="received_date"
+           value="{{ record.received_date.isoformat() }}" required>
+
+    <label for="amount_aud">Gross Amount Received (AUD)</label>
+    <input type="number" id="amount_aud" name="amount_aud" step="0.01" min="0"
+           value="{{ record.amount_aud }}" required>
+
+    <label for="gst_amount">GST Collected (leave blank if none)</label>
+    <input type="number" id="gst_amount" name="gst_amount" step="0.01" min="0"
+           value="{{ record.gst_amount if record.gst_amount else '' }}">
+
+    <label for="description">Description</label>
+    <input type="text" id="description" name="description" maxlength="200"
+           value="{{ record.description or '' }}">
+
+    <label for="notes">Notes</label>
+    <textarea id="notes" name="notes">{{ record.notes or '' }}</textarea>
+
+    <div class="form-actions">
+        <button type="submit" class="btn">Save Changes</button>
+        <a href="{{ url_for('income.detail', income_id=record.id) }}" class="btn btn-muted">Cancel</a>
+    </div>
+
+</form>
+</div>
+
+{% endblock %}

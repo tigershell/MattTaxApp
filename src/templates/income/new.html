@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}New Income — Taxidermatt{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>New Income</h1>
+    <span class="sub">Record a sale / payment received</span>
+</div>
+
+<div class="card" style="max-width: 600px;">
+<form method="POST" action="{{ url_for('income.new') }}">
+
+    <label for="source">Source</label>
+    <select id="source" name="source">
+        {% for s in sources %}
+        <option value="{{ s.value }}"{% if s.value == 'manual' %} selected{% endif %}>{{ s.value.replace('_', ' ')|title }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="source_name">Paid By / Platform (optional)</label>
+    <input type="text" id="source_name" name="source_name" maxlength="150"
+           placeholder="e.g. Stripe, or the customer's name">
+
+    <label for="invoice_number">Invoice Number (optional)</label>
+    <input type="text" id="invoice_number" name="invoice_number" maxlength="100"
+           placeholder="e.g. INV-1234">
+
+    <label for="received_date">Date Received</label>
+    <input type="date" id="received_date" name="received_date" value="{{ today }}" required>
+
+    <label for="amount_aud">Gross Amount Received (AUD)</label>
+    <input type="number" id="amount_aud" name="amount_aud" step="0.01" min="0" required>
+
+    <label for="gst_amount">GST Collected (leave blank if none)</label>
+    <input type="number" id="gst_amount" name="gst_amount" step="0.01" min="0">
+    <p class="text-muted" style="font-size:12px; margin-top:4px;">
+        {% if fy.gst_registration_date %}
+            You registered for GST on <strong>{{ fy.gst_registration_date.strftime('%d %b %Y') }}</strong>.
+            For a taxable sale dated on or after that, GST is 1/11th of the gross amount.
+            For a sale dated <em>before</em> it (e.g. on a pre-GST setup), leave this blank — no GST applies.
+        {% else %}
+            No GST registration date is set for {{ fy.label }}, so leave this blank — no GST applies yet.
+        {% endif %}
+    </p>
+
+    <label for="description">Description (optional)</label>
+    <input type="text" id="description" name="description" maxlength="200"
+           placeholder="What was the sale for?">
+
+    <label for="notes">Notes (optional)</label>
+    <textarea id="notes" name="notes"></textarea>
+
+    <p class="text-muted" style="font-size:12px; margin-top:12px; border-left:2px solid var(--green-dark); padding-left:12px;">
+        Record income at the <strong>gross</strong> amount. If a platform like Stripe took a
+        processing fee, enter that separately as an
+        <a href="{{ url_for('expenses.new') }}" style="color:var(--green-dim);">Expense</a>
+        so the fee (and any GST on it) is captured as a deduction.
+    </p>
+
+    <div class="form-actions">
+        <button type="submit" class="btn">Save Income</button>
+        <a href="{{ url_for('income.list_income') }}" class="btn btn-muted">Cancel</a>
+    </div>
+</form>
+</div>
+
+{% endblock %}

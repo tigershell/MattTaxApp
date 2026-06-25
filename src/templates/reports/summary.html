@@ -1,23 +1,110 @@
 {% extends "base.html" %}
-{% block title %}Tax Summary — Tax Tracker{% endblock %}
+{% block title %}Tax Summary — Taxidermatt{% endblock %}
 {% block content %}
-<h2>Tax Summary — {{ summary.financial_year }}</h2>
-<p>{{ summary.expense_count }} expense(s) | Total: <strong>${{ "%.2f"|format(summary.grand_total) }}</strong></p>
 
-{% for cat, data in summary.categories.items() %}
-{% if data.expenses %}
-<h3>{{ cat }}</h3>
+<div class="page-header">
+    <h1>Tax Summary</h1>
+    <span class="sub">{{ summary.financial_year }}</span>
+</div>
+
+<!-- Income tax position -->
+<div class="card-grid" style="margin-bottom: 24px;">
+    <div class="stat-card">
+        <div class="stat-label">Assessable income (ex-GST)</div>
+        <div class="stat-value">${{ "{:,.2f}".format(summary.total_assessable_income|float) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Total deductions (ex-GST)</div>
+        <div class="stat-value">${{ "{:,.2f}".format(summary.total_deductions|float) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Net {% if summary.is_profit %}profit{% else %}loss{% endif %}</div>
+        <div class="stat-value {% if not summary.is_profit %}warning{% endif %}">
+            ${{ "{:,.2f}".format(summary.net_position|abs|float) }}
+        </div>
+    </div>
+</div>
+
+<!-- GST / BAS position -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="text-dim" style="font-size: 11px; margin-bottom: 16px;">GST / BAS POSITION</div>
+    {% if summary.gst_registered %}
+    <table style="width: 100%;">
+        <tr>
+            <td>GST collected on sales (output tax)</td>
+            <td class="text-right">${{ "%.2f"|format(summary.gst_collected) }}</td>
+        </tr>
+        <tr>
+            <td>GST paid on purchases (Input Tax Credits)</td>
+            <td class="text-right">− ${{ "%.2f"|format(summary.gst_paid) }}</td>
+        </tr>
+        <tr style="border-top: 1px solid var(--border);">
+            <td><strong>{% if summary.gst_net >= 0 %}Net GST owed to ATO{% else %}Net GST refund from ATO{% endif %}</strong></td>
+            <td class="text-right"><strong>${{ "%.2f"|format(summary.gst_net|abs) }}</strong></td>
+        </tr>
+    </table>
+    <p class="text-muted" style="font-size:12px; margin-top:8px;">
+        GST registered from {{ summary.gst_registration_date.strftime('%d %b %Y') }}.
+        These figures go on your BAS, not your income tax return.
+    </p>
+    {% else %}
+    <p class="text-dim">
+        No GST registration date is set for {{ summary.financial_year }}, so no GST is being tracked.
+        Set a registration date on the
+        <a href="{{ url_for('years.list_years') }}" style="color:var(--green-dim);">Financial Years</a>
+        page once you're registered.
+    </p>
+    {% endif %}
+</div>
+
+<!-- Income detail -->
+<h3>Income — {{ summary.income_count }} record(s)</h3>
+{% if summary.income_records %}
+<div class="card">
 <table>
     <thead>
-        <tr><th>Date</th><th>Vendor</th><th>Description</th><th>Amount</th></tr>
+        <tr><th>Date</th><th>Source</th><th>Gross</th><th>GST</th><th>Assessable</th></tr>
+    </thead>
+    <tbody>
+        {% for i in summary.income_records %}
+        <tr>
+            <td>{{ i.formatted_date() }}</td>
+            <td>{{ i.source_name or i.source.value|title }}</td>
+            <td>{{ i.formatted_amount() }}</td>
+            <td class="text-dim">{% if i.gst_payable() %}${{ "%.2f"|format(i.gst_payable()) }}{% else %}—{% endif %}</td>
+            <td>${{ "%.2f"|format(i.assessable_amount()) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="4"><strong>Total assessable income</strong></td>
+            <td><strong>${{ "%.2f"|format(summary.total_assessable_income) }}</strong></td>
+        </tr>
+    </tfoot>
+</table>
+</div>
+{% else %}
+<div class="card text-dim">No income recorded for {{ summary.financial_year }}.</div>
+{% endif %}
+
+<!-- Expense detail by category -->
+<h3 style="margin-top: 30px;">Deductible Expenses</h3>
+{% for cat, data in summary.categories.items() %}
+{% if data.expenses %}
+<h4>{{ cat }}</h4>
+<div class="card">
+<table>
+    <thead>
+        <tr><th>Date</th><th>Vendor</th><th>Description</th><th>Deductible (ex-GST)</th></tr>
     </thead>
     <tbody>
         {% for e in data.expenses %}
         <tr>
             <td>{{ e.formatted_date() }}</td>
-            <td>{{ e.vendor }}</td>
+            <td>{{ e.vendor.name }}</td>
             <td>{{ e.description or '—' }}</td>
-            <td>{{ e.formatted_amount() }}</td>
+            <td>${{ "%.2f"|format(e.deductible_amount()) }}</td>
         </tr>
         {% endfor %}
     </tbody>
@@ -25,13 +112,18 @@
         <tr><td colspan="3"><strong>Category Total</strong></td><td><strong>${{ "%.2f"|format(data.total) }}</strong></td></tr>
     </tfoot>
 </table>
+</div>
 {% endif %}
 {% endfor %}
 
-<h3 style="margin-top:30px;">ATO myTax Instructions</h3>
-<ul style="list-style: none; padding: 0;">
+<!-- ATO instructions -->
+<h3 style="margin-top: 30px;">ATO myTax Instructions</h3>
+<div class="card">
+<ul style="list-style: none; padding: 0; margin: 0;">
     {% for instruction in summary.ato_instructions %}
     <li style="margin-bottom: 6px;">{{ instruction }}</li>
     {% endfor %}
 </ul>
+</div>
+
 {% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Income — Taxidermatt{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>Income</h1>
+    <span class="sub">{{ fy.label }} &mdash; {{ records|length }} record(s) &mdash; Total ${{ "{:,.2f}".format(total|float) }}</span>
+    <a href="{{ url_for('income.new') }}" class="btn btn-muted" style="margin-left: auto;">+ New Income</a>
+</div>
+
+{% if records %}
+<div class="card">
+<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Source</th>
+            <th>Invoice #</th>
+            <th>Gross (AUD)</th>
+            <th>GST</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in records %}
+        <tr>
+            <td>{{ r.formatted_date() }}</td>
+            <td>{{ r.source_name or r.source.value|title }}</td>
+            <td class="text-dim">{{ r.invoice_number or '—' }}</td>
+            <td>{{ r.formatted_amount() }}</td>
+            <td class="text-dim">
+                {% if r.gst_payable() %}${{ "%.2f"|format(r.gst_payable()) }}{% else %}—{% endif %}
+            </td>
+            <td class="text-right">
+                <a href="{{ url_for('income.detail', income_id=r.id) }}" class="btn btn-sm">View</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<div class="card text-dim">
+    No income recorded yet for {{ fy.label }}.
+    <a href="{{ url_for('income.new') }}" style="color:var(--green-dim);">Record your first sale.</a>
+</div>
+{% endif %}
+
+{% endblock %}

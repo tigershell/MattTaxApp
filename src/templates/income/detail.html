@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Income #{{ record.id }} — Taxidermatt{% endblock %}
+{% block content %}
+
+<div class="page-header">
+    <h1>{{ record.source_name or record.source.value|title }}</h1>
+    <span class="sub">{{ record.formatted_date() }}</span>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; max-width: 800px; margin-bottom: 24px;">
+
+    <div class="card">
+        <div class="text-dim" style="font-size: 11px; margin-bottom: 4px;">GROSS (AUD)</div>
+        <div style="font-size: 24px; color: var(--green);">{{ record.formatted_amount() }}</div>
+    </div>
+
+    <div class="card">
+        <div class="text-dim" style="font-size: 11px; margin-bottom: 4px;">GST COLLECTED</div>
+        <div style="font-size: 24px; color: var(--green);">
+            {% if record.gst_payable() %}${{ "%.2f"|format(record.gst_payable()) }}{% else %}—{% endif %}
+        </div>
+        <div class="text-dim" style="font-size: 12px; margin-top: 4px;">
+            {% if record.gst_applies() %}GST applies{% else %}No GST (pre-registration){% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="text-dim" style="font-size: 11px; margin-bottom: 4px;">ASSESSABLE (EX-GST)</div>
+        <div style="font-size: 24px; color: var(--green);">${{ "%.2f"|format(record.assessable_amount()) }}</div>
+        <div class="text-dim" style="font-size: 12px; margin-top: 4px;">Counts as income tax</div>
+    </div>
+
+</div>
+
+<div class="card" style="max-width: 800px; margin-bottom: 24px;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td class="text-dim" style="padding: 8px 0; width: 180px; font-size: 13px;">Source</td>
+            <td style="padding: 8px 0;">{{ record.source.value.replace('_', ' ')|title }}</td>
+        </tr>
+        <tr>
+            <td class="text-dim" style="padding: 8px 0; font-size: 13px;">Invoice Number</td>
+            <td style="padding: 8px 0;">{{ record.invoice_number or '—' }}</td>
+        </tr>
+        <tr>
+            <td class="text-dim" style="padding: 8px 0; font-size: 13px;">Financial Year</td>
+            <td style="padding: 8px 0;">{{ record.financial_year.label }}</td>
+        </tr>
+        <tr>
+            <td class="text-dim" style="padding: 8px 0; font-size: 13px;">Description</td>
+            <td style="padding: 8px 0;">{{ record.description or '—' }}</td>
+        </tr>
+        <tr>
+            <td class="text-dim" style="padding: 8px 0; font-size: 13px;">Notes</td>
+            <td style="padding: 8px 0;">{{ record.notes or '—' }}</td>
+        </tr>
+        <tr>
+            <td class="text-dim" style="padding: 8px 0; font-size: 13px;">Saved</td>
+            <td style="padding: 8px 0;">{{ record.created_at.strftime('%d %b %Y %H:%M') }}</td>
+        </tr>
+    </table>
+</div>
+
+<div class="form-actions" style="max-width: 800px;">
+    <a href="{{ url_for('income.list_income') }}" class="btn btn-muted">← Back</a>
+    <a href="{{ url_for('income.edit', income_id=record.id) }}" class="btn">Edit</a>
+    <form method="POST" action="{{ url_for('income.delete', income_id=record.id) }}"
+          style="display:inline;"
+          onsubmit="return confirm('Delete Income #{{ record.id }}? This cannot be undone.');">
+        <button type="submit" class="btn btn-danger">Delete</button>
+    </form>
+</div>
+
+{% endblock %}

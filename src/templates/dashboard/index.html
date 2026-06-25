@@ -9,8 +9,16 @@
 
 <div class="card-grid" style="margin-bottom: 24px;">
     <div class="stat-card">
+        <div class="stat-label">Total income (AUD)</div>
+        <div class="stat-value">${{ "{:,.2f}".format(total_income|float) }}</div>
+    </div>
+    <div class="stat-card">
         <div class="stat-label">Total spend (AUD)</div>
         <div class="stat-value">${{ "{:,.2f}".format(total_aud|float) }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Net {% if net_position >= 0 %}profit{% else %}loss{% endif %} (AUD)</div>
+        <div class="stat-value {% if net_position < 0 %}warning{% endif %}">${{ "{:,.2f}".format(net_position|abs|float) }}</div>
     </div>
     <div class="stat-card">
         <div class="stat-label">Expenses this FY</div>
@@ -100,6 +108,7 @@
 {% endif %}
 
 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+    <a href="{{ url_for('income.list_income') }}" class="btn">All Income</a>
     <a href="{{ url_for('expenses.list_expenses') }}" class="btn">All Expenses</a>
     <a href="{{ url_for('reports.report') }}" class="btn btn-muted">Tax Summary</a>
     <a href="{{ url_for('years.list_years') }}" class="btn btn-muted">Financial Years</a>
