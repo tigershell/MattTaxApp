@@ -109,6 +109,27 @@ def _extract_and_show_confirm(file_bytes: bytes, filename: str, media_type: str,
     )
 
 
+def _advance_queue():
+    """Move on to the next queued upload, or return None if the queue is empty.
+
+    Pops the next file from the session queue, makes it the pending upload, and
+    renders its confirm form. Returning None lets the caller fall back to its own
+    final redirect (used when the whole batch is finished). Both the save path
+    and the duplicate-skip path use this so a duplicate never halts the batch.
+    """
+    queue = session.get("upload_queue", [])
+    if not queue:
+        return None
+    next_item = queue.pop(0)
+    session["upload_queue"] = queue
+    session["pending_pdf_path"] = next_item["path"]
+    session["pending_filename"] = next_item["filename"]
+    session["pending_media_type"] = next_item["media_type"]
+    with open(next_item["path"], "rb") as fh:
+        next_bytes = fh.read()
+    return _extract_and_show_confirm(next_bytes, next_item["filename"], next_item["media_type"], len(queue))
+
+
 @upload_bp.route("/upload", methods=["GET", "POST"])
 @login_required
 def upload():
@@ -251,21 +272,21 @@ def confirm():
     if existing:
         if existing.invoice_attached:
             flash(
-                f"Duplicate invoice — this already exists as Expense #{existing.id} "
-                f"({existing.vendor.name}, {existing.formatted_date()}). No changes made.",
-                "error",
+                f"Skipped duplicate {filename} — already saved as Expense #{existing.id} "
+                f"({existing.vendor.name}, {existing.formatted_date()})."
             )
-            return redirect(url_for("expenses.detail", expense_id=existing.id))
-        # Existing record has no PDF yet — attach it now
-        if pdf_bytes:
-            existing.pdf_data = pdf_bytes
-            existing.invoice_attached = True
-            db.session.commit()
-        flash(
-            f"PDF attached to existing Expense #{existing.id} "
-            f"({existing.vendor.name}, {existing.formatted_date()})."
-        )
-        return redirect(url_for("expenses.detail", expense_id=existing.id))
+        else:
+            # Existing record has no PDF yet — attach this upload to it
+            if pdf_bytes:
+                existing.pdf_data = pdf_bytes
+                existing.invoice_attached = True
+                db.session.commit()
+            flash(
+                f"PDF attached to existing Expense #{existing.id} "
+                f"({existing.vendor.name}, {existing.formatted_date()})."
+            )
+        # Don't stop the batch on a duplicate — carry on with the next file
+        return _advance_queue() or redirect(url_for("expenses.detail", expense_id=existing.id))
 
     # Create new expense record
     expense = Expense(
@@ -291,15 +312,4 @@ def confirm():
     flash(f"Expense saved — ${amount_aud:,.2f} AUD ({vendor.name}, {invoice_date}).")
 
     # Advance the queue: if more files are waiting, process the next one
-    queue = session.get("upload_queue", [])
-    if queue:
-        next_item = queue.pop(0)
-        session["upload_queue"] = queue
-        session["pending_pdf_path"] = next_item["path"]
-        session["pending_filename"] = next_item["filename"]
-        session["pending_media_type"] = next_item["media_type"]
-        with open(next_item["path"], "rb") as fh:
-            next_bytes = fh.read()
-        return _extract_and_show_confirm(next_bytes, next_item["filename"], next_item["media_type"], len(queue))
-
-    return redirect(url_for("expenses.detail", expense_id=expense.id))
+    return _advance_queue() or redirect(url_for("expenses.detail", expense_id=expense.id))
