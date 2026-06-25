@@ -1,6 +1,6 @@
 # Logic Notes — Taxidermatt
 
-*Updated: 25 May 2026*
+*Updated: 25 June 2026*
 
 This file documents non-obvious decisions, data flows, and implementation quirks. Update it when anything surprising is discovered during coding.
 
@@ -59,8 +59,10 @@ PDFs are stored in OS temp files between the upload step and confirm step becaus
 - `amount_aud` within ±$0.01 (handles rounding differences)
 
 **Duplicate handling on re-upload:**
-- Duplicate found + existing record **already has a PDF** → blocked with error flash, redirect to existing expense. No changes made.
+- Duplicate found + existing record **already has a PDF** → skipped with an informational flash. No changes made.
 - Duplicate found + existing record **has no PDF** → PDF is attached to the existing record. This handles the workflow where Railway sync creates a record first and the PDF is uploaded later.
+
+**Duplicates must not halt a bulk upload.** Originally a duplicate did `redirect(...)` to the existing expense, which silently abandoned the rest of `session["upload_queue"]` — so one duplicate killed the whole batch. Both the save path and the duplicate path now call the shared `_advance_queue()` helper, which moves to the next queued file (or falls back to a final redirect when the queue is empty). This keeps bulk re-uploads moving past invoices that are already saved. (Note: a currency-conversion failure on a USD invoice still ends the batch via an error redirect — a candidate for the same skip-and-continue treatment if it becomes a problem.)
 
 ---
 
@@ -103,17 +105,65 @@ Searchable fields per page:
 
 All expenses belong to a `FinancialYear` (1 Jul – 30 Jun). The current year is created automatically on first access via `FinancialYear.get_or_create_current()`.
 
-The `gst_registration_date` field on `FinancialYear` is the dividing line:
-- Expenses before this date: full `amount_aud` is deductible
-- Expenses on or after: `amount_aud - gst_amount` is deductible (GST becomes an Input Tax Credit)
+The `gst_registration_date` field on `FinancialYear` is the dividing line, and the **same logic governs both expenses and income**:
+- Expenses before this date: full `amount_aud` is deductible. On or after: `amount_aud - gst_amount` is deductible (GST becomes an Input Tax Credit).
+- Income before this date: full amount is assessable, no GST. On or after: GST collected is owed to the ATO (output tax) and the ex-GST amount is assessable.
 
-This field is null until Matt registers for GST. The BAS report activates automatically when the date is entered.
+This field is null until Matt registers for GST. The BAS / GST position in the tax report activates automatically when the date is entered.
+
+---
+
+## Income Tracking
+
+`models/income.py` is the income-side mirror of `Expense`. Each `Income` row stores the gross AUD amount received and an optional `gst_amount` (GST collected). GST treatment reuses the financial year's registration date via the same helpers as expenses:
+
+- `gst_applies()` → `financial_year.is_gst_registered_on(received_date)`
+- `gst_payable()` → GST collected that is owed to the ATO (output tax), or `0.00` when GST doesn't apply
+- `assessable_amount()` → `amount_aud - gst_payable()` (the income-tax-assessable, ex-GST portion)
+
+**Why this matters:** income received on a setup that pre-dates GST registration carries no GST automatically — the full amount is assessable and nothing is owed. Income on/after registration is treated as GST-inclusive (GST = 1/11th of the gross).
+
+Entry is **manual** for now (`routes/income.py`, mirroring the expense routes' inline form parsing). Stripe API sync is a future milestone. **Stripe fees** are recorded as a separate `Expense` (so the fee, and any GST on it, is captured as a deduction) rather than netted off income — income is recorded gross.
+
+---
+
+## Tax Report — Income vs Expenses
+
+`services/tax_report_service.py` produces three views for the current financial year:
+
+1. **Income tax** — total assessable income (ex-GST) minus total deductible expenses (ex-GST) = net profit or loss. Expenses are summed with `deductible_amount()`, **not** raw `amount_aud` (the previous version summed the raw amount, which over-stated deductions once GST-registered — fixed).
+2. **GST / BAS** — GST collected on sales (output tax) minus GST paid on purchases (Input Tax Credits) = net owed to / refundable from the ATO.
+3. **myTax instructions** — built dynamically from the real figures (income is no longer hard-coded to $0.00) and switches between the profit and loss wording.
+
+The dashboard shows the same income/spend/net headline figures.
+
+---
+
+## Backups
+
+`logic/backup_manager.py` (`BackupManager`) creates and restores SQLite snapshots using SQLite's **online backup API** (`sqlite3.Connection.backup`), so a snapshot is consistent even while the dev server is running. The live DB path is read from the resolved engine URL (`db.engine.url.database`), not the raw config string, so it's correct regardless of how Flask-SQLAlchemy resolved a relative URI.
+
+- **In-app:** a **Backup** page (`routes/backup.py`) with a one-click "Download backup now" (creates a snapshot in `backups/` *and* streams it to the browser), a list of existing backups, and **Restore** (which snapshots the current DB first, so a restore can never lose present data).
+- **CLI:** `flask backup` and `flask restore <file>` do the same for dev/ops use (e.g. before running a migration).
+- `backups/` is gitignored — snapshots contain real financial data and invoice PDFs.
+
+Only SQLite is supported; a hosted Postgres DB would use the provider's managed backups instead.
+
+---
+
+## Test Isolation (data-loss fix)
+
+`create_app()` accepts a `config_overrides` dict applied **after** `from_object` but **before** `db.init_app()`. This exists because Flask-SQLAlchemy 3.x binds its engine inside `init_app()` — so setting `app.config["SQLALCHEMY_DATABASE_URI"]` *after* `create_app()` (as the old `conftest.py` did) was silently ignored, and the test suite's `create_all()`/`drop_all()` ran against the **real dev database**, dropping live data.
+
+`tests/conftest.py` now passes the in-memory URI through `create_app({...})`, guaranteeing the engine binds to `sqlite:///:memory:` before any table operation. Verified: the test engine resolves to `:memory:` and the suite cannot touch the real DB.
 
 ---
 
 ## Known Limitations / Future Work
 
-- **Revenue tracking:** Stripe, App Store Connect, and Google Play revenue are not yet wired in. Design decision: wait until revenue is actually flowing before connecting these APIs, so the integration matches the real data format.
+- **Revenue tracking:** manual income entry is now in (`Income` model + entry pages, wired into the tax report). Automated revenue sync — Stripe, App Store Connect, Google Play — is still not wired in. Design decision: wait until revenue is actually flowing before connecting these APIs, so the integration matches the real data format.
+- **Income financial-year assignment:** new income is assigned to the *current* FY (like expenses), not the FY of its `received_date`. Fine for current use; revisit if back-dating income across financial years becomes common.
+- **Bulk upload still confirms one invoice at a time:** by design (review each extraction), but duplicates no longer halt the batch. A USD invoice whose exchange-rate lookup fails will still stop the batch.
 - **Railway API sync:** Billing queries are undocumented — schema discovery via GraphiQL is required before this can be built (M3).
 - **PDF temp file cleanup:** Abandoned mid-queue uploads leave orphaned temp files. Acceptable for now; could add a cleanup task later.
 - **Exchange rates:** Frankfurter uses ECB data, not literally RBA rates. For ATO purposes this is acceptable for small business expenses. If exact RBA rates are ever required, the `RBAClient` can be updated to use a different source without changing `CurrencyConverter`.

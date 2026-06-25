@@ -1,8 +1,14 @@
 # Tax Tracker
 
-A locally-deployed Flask web application for tracking Australian sole trader business expenses for the ATO tax return.
+A locally-deployed Flask web application for tracking Australian sole trader business expenses and income for the ATO tax return.
 
 Upload PDF tax invoices → Claude API extracts the data automatically → expenses stored in PostgreSQL → end-of-year ATO summary generated.
+
+**Features:**
+- **Expenses** — upload invoices (PDF/JPG/PNG) for automatic extraction, or enter manually; multi-currency with RBA-style conversion; duplicate detection.
+- **Income** — manual entry of sales, with GST treatment driven by your GST registration date (Stripe API sync planned).
+- **Tax Summary** — net profit/loss (assessable income − deductible expenses, both ex-GST), a GST/BAS position (GST collected − Input Tax Credits), and step-by-step myTax instructions.
+- **Backups** — one-click database backup/restore from the **Backup** page (or `flask backup` / `flask restore` on the CLI).
 
 ## Stack
 
@@ -38,7 +44,21 @@ flask --app "src:create_app()" shell
 
 # 5. Run
 flask --app "src:create_app()" run
+
+# During development, add --debug to auto-reload on code changes:
+flask --app "src:create_app()" --debug run
 ```
+
+## Backups
+
+The database is a single SQLite file (`instance/taxidermatt.db`). Back it up from the **Backup** page in the app ("Download backup now"), or via the CLI:
+
+```bash
+flask --app "src:create_app()" backup            # timestamped copy in backups/
+flask --app "src:create_app()" restore <file>    # restore (snapshots current DB first)
+```
+
+Backups are written to `backups/` (gitignored). Keep at least one copy off this drive — they contain real financial data and invoice PDFs.
 
 ## Deployment
 
