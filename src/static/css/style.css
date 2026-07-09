@@ -102,6 +102,20 @@ nav a.active { color: var(--green); }
     margin-bottom: 16px;
 }
 
+/* A whole card that acts as a link — used for the financial year cards. */
+.card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.card-link:hover,
+.card-link:focus-visible {
+    border-color: var(--green);
+    background: var(--bg-card-hover, var(--bg-card));
+}
+
 .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

@@ -42,7 +42,11 @@ def create_app(config_overrides: dict | None = None) -> Flask:
 
     # Import all models so Flask-Migrate can discover them for migrations
     with app.app_context():
-        from .models import User, FinancialYear, Vendor, Expense, Income, RBARate, Document  # noqa: F401
+        from .models import (  # noqa: F401
+            User, BusinessSettings, FinancialYear, Vendor, Expense, Income, RBARate, Document,
+        )
+
+    _register_context_processors(app)
 
     # Register blueprints
     from .routes.auth import auth_bp
@@ -68,6 +72,21 @@ def create_app(config_overrides: dict | None = None) -> Flask:
     _register_cli(app)
 
     return app
+
+
+def _register_context_processors(app: Flask) -> None:
+    """Make app-wide values available to every template without route plumbing."""
+
+    @app.context_processor
+    def inject_business_settings() -> dict:
+        """Expose `business` (the settings singleton) to all templates.
+
+        Several pages need the GST registration date. Injecting it here avoids
+        passing it through every route that renders a template.
+        """
+        from .models.business_settings import BusinessSettings
+
+        return {"business": BusinessSettings.get()}
 
 
 def _register_cli(app: Flask) -> None:

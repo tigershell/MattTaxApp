@@ -3,6 +3,7 @@ import enum
 from decimal import Decimal
 from typing import Optional
 from ..extensions import db
+from .business_settings import BusinessSettings
 
 
 class ExpenseSource(enum.Enum):
@@ -63,15 +64,15 @@ class Expense(db.Model):
     def gst_applies(self) -> bool:
         """Return True if GST rules should split this expense's amount.
 
-        Requires the vendor to charge GST AND the financial year to have
-        a GST registration date set AND the invoice date to be on or after
-        that registration date.
+        Requires the vendor to charge GST AND the business to have been GST
+        registered on the invoice date. Registration is read from
+        BusinessSettings, so it carries across financial years automatically.
         """
-        if not self.vendor or not self.financial_year:
+        if not self.vendor:
             return False
         if not self.vendor.charges_gst:
             return False
-        return self.financial_year.is_gst_registered_on(self.invoice_date)
+        return BusinessSettings.get().is_gst_registered_on(self.invoice_date)
 
     def deductible_amount(self) -> Decimal:
         """Return the ATO-deductible portion of this expense in AUD.

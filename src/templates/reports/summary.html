@@ -4,7 +4,10 @@
 
 <div class="page-header">
     <h1>Tax Summary</h1>
-    <span class="sub">{{ summary.financial_year }}</span>
+    <span class="sub">
+        {{ summary.financial_year }} ·
+        <a href="{{ url_for('years.list_years') }}" style="color:var(--green-dim);">change year</a>
+    </span>
 </div>
 
 <!-- Income tax position -->
@@ -44,15 +47,20 @@
         </tr>
     </table>
     <p class="text-muted" style="font-size:12px; margin-top:8px;">
-        GST registered from {{ summary.gst_registration_date.strftime('%d %b %Y') }}.
+        {{ summary.gst_status }}.
         These figures go on your BAS, not your income tax return.
     </p>
     {% else %}
     <p class="text-dim">
-        No GST registration date is set for {{ summary.financial_year }}, so no GST is being tracked.
-        Set a registration date on the
-        <a href="{{ url_for('years.list_years') }}" style="color:var(--green-dim);">Financial Years</a>
-        page once you're registered.
+        {% if business.is_registered %}
+            You registered for GST on {{ business.gst_registration_date.strftime('%d %b %Y') }},
+            after {{ summary.financial_year }} ended — so no GST applies to this year.
+        {% else %}
+            No GST registration date is set, so no GST is being tracked.
+            Set one on the
+            <a href="{{ url_for('years.list_years') }}" style="color:var(--green-dim);">Financial Years</a>
+            page once you're registered.
+        {% endif %}
     </p>
     {% endif %}
 </div>

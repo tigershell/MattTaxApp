@@ -34,12 +34,14 @@
     <label for="gst_amount">GST Collected (leave blank if none)</label>
     <input type="number" id="gst_amount" name="gst_amount" step="0.01" min="0">
     <p class="text-muted" style="font-size:12px; margin-top:4px;">
-        {% if fy.gst_registration_date %}
-            You registered for GST on <strong>{{ fy.gst_registration_date.strftime('%d %b %Y') }}</strong>.
+        {% if business.is_registered %}
+            You registered for GST on <strong>{{ business.gst_registration_date.strftime('%d %b %Y') }}</strong>.
             For a taxable sale dated on or after that, GST is 1/11th of the gross amount.
             For a sale dated <em>before</em> it (e.g. on a pre-GST setup), leave this blank — no GST applies.
         {% else %}
-            No GST registration date is set for {{ fy.label }}, so leave this blank — no GST applies yet.
+            No GST registration date is set, so leave this blank — no GST applies yet.
+            You can set one on the
+            <a href="{{ url_for('years.list_years') }}" style="color:var(--green-dim);">Financial Years</a> page.
         {% endif %}
     </p>
 

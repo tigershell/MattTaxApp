@@ -105,19 +105,44 @@ Searchable fields per page:
 
 All expenses belong to a `FinancialYear` (1 Jul – 30 Jun). The current year is created automatically on first access via `FinancialYear.get_or_create_current()`.
 
-The `gst_registration_date` field on `FinancialYear` is the dividing line, and the **same logic governs both expenses and income**:
+Financial years are read-only records — label and dates only. Each card on the Financial Years page links to `/report?year=<id>`, which is how past years' tax summaries are viewed.
+
+---
+
+## GST Registration — an app-wide setting, not a per-year one
+
+`BusinessSettings` (`models/business_settings.py`) is a single-row table holding `gst_registration_date`. It is the dividing line, and the **same logic governs both expenses and income**:
 - Expenses before this date: full `amount_aud` is deductible. On or after: `amount_aud - gst_amount` is deductible (GST becomes an Input Tax Credit).
 - Income before this date: full amount is assessable, no GST. On or after: GST collected is owed to the ATO (output tax) and the ex-GST amount is assessable.
 
-This field is null until Matt registers for GST. The BAS / GST position in the tax report activates automatically when the date is entered.
+The date is null until Matt registers for GST. The BAS / GST position in the tax report activates automatically when it is entered.
+
+### Why it moved off `FinancialYear` (fixed 2026-07-09)
+
+`gst_registration_date` originally lived on `FinancialYear`. This was wrong: you register for GST **once**, and stay registered until you cancel — it does not restart each July. The consequences were real and silent:
+
+- Every new financial year started with a null date, so `gst_applies()` returned `False` for all of its records. That year's expenses claimed **no Input Tax Credits** and were deducted GST-inclusive (overstating deductions, understating the BAS refund).
+- The date input was clamped with `min`/`max` to the year's own range, so a registration date from a *prior* year could not even be entered into a later year. The data model made the correct answer unrepresentable.
+
+This surfaced on the rollover into FY 2026-27, which appeared as "Not GST registered" with one expense already recorded against it.
+
+A single registration date is interpreted per-year by two `FinancialYear` helpers, so the year-level view is derived rather than stored:
+- `gst_applies_during(reg_date)` → was the business registered at any point in this year? (False for years that ended before registration — those have no BAS position at all.)
+- `gst_status(reg_date)` → `"Not GST registered"` / `"GST registered from <date>"` / `"GST registered (whole year)"`
+
+**Known limitation:** a single date cannot express GST *de-registration* (registering, cancelling, then re-registering). If that ever happens, this needs to become a date range or a list of registration periods.
+
+### `BusinessSettings.get()` never writes
+
+`get()` returns an unsaved default when no row exists, and memoises the row on Flask's `g` for the request. It deliberately does **not** insert or commit, because `gst_applies()` is called from inside request handlers that may have their own uncommitted changes pending — a commit there would flush a half-built expense to disk. Use `get_or_create()` (which commits) only when actually saving a setting.
 
 ---
 
 ## Income Tracking
 
-`models/income.py` is the income-side mirror of `Expense`. Each `Income` row stores the gross AUD amount received and an optional `gst_amount` (GST collected). GST treatment reuses the financial year's registration date via the same helpers as expenses:
+`models/income.py` is the income-side mirror of `Expense`. Each `Income` row stores the gross AUD amount received and an optional `gst_amount` (GST collected). GST treatment reuses the business-wide registration date via the same helpers as expenses:
 
-- `gst_applies()` → `financial_year.is_gst_registered_on(received_date)`
+- `gst_applies()` → `BusinessSettings.get().is_gst_registered_on(received_date)`
 - `gst_payable()` → GST collected that is owed to the ATO (output tax), or `0.00` when GST doesn't apply
 - `assessable_amount()` → `amount_aud - gst_payable()` (the income-tax-assessable, ex-GST portion)
 

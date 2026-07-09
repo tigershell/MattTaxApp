@@ -2,6 +2,7 @@ import datetime
 import enum
 from decimal import Decimal
 from ..extensions import db
+from .business_settings import BusinessSettings
 
 
 class IncomeSource(enum.Enum):
@@ -19,7 +20,7 @@ class Income(db.Model):
     (output tax owed to the ATO on the next BAS).
 
     GST treatment reuses the same registration-date logic as expenses
-    (FinancialYear.is_gst_registered_on). Income received BEFORE the GST
+    (BusinessSettings.is_gst_registered_on). Income received BEFORE the GST
     registration date carries no GST: the full amount is assessable income and
     nothing is payable to the ATO. This is exactly the case for a sale made on
     a setup that pre-dates GST registration.
@@ -52,13 +53,10 @@ class Income(db.Model):
     def gst_applies(self) -> bool:
         """Return True if GST should be treated as collected on this income.
 
-        True only when the financial year has a GST registration date set and
-        this income was received on or after it. Pre-registration income is
-        GST-free.
+        True only when the business has a GST registration date set and this
+        income was received on or after it. Pre-registration income is GST-free.
         """
-        if not self.financial_year:
-            return False
-        return self.financial_year.is_gst_registered_on(self.received_date)
+        return BusinessSettings.get().is_gst_registered_on(self.received_date)
 
     def gst_payable(self) -> Decimal:
         """Return the GST collected on this income that is owed to the ATO.

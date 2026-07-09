@@ -1,5 +1,7 @@
 from decimal import Decimal
+from typing import Optional
 
+from ..models.business_settings import BusinessSettings
 from ..models.expense import Expense, ATO_CATEGORIES
 from ..models.income import Income
 from ..models.financial_year import FinancialYear
@@ -8,7 +10,7 @@ from ..models.financial_year import FinancialYear
 class TaxReportService:
     """Generates the ATO tax summary from stored income and expenses.
 
-    Produces three views for the current financial year:
+    Produces three views for a financial year:
       * Income tax — assessable income (ex-GST) minus deductible expenses
         (ex-GST), giving a net profit or loss.
       * GST / BAS — GST collected on sales minus GST paid on purchases
@@ -17,13 +19,26 @@ class TaxReportService:
       * myTax instructions — step-by-step guidance reflecting the real figures.
 
     All GST splitting is driven by each record's own gst_applies() check, which
-    reuses the financial year's GST registration date. Pre-registration records
-    are treated as GST-free automatically.
+    reads the business-wide GST registration date. Pre-registration records are
+    treated as GST-free automatically.
     """
 
-    def generate_summary(self) -> dict:
-        """Build the full summary dict for the current financial year."""
-        fy = FinancialYear.get_or_create_current()
+    def generate_summary(self, year_id: Optional[int] = None) -> dict:
+        """Build the full summary dict for a financial year.
+
+        Args:
+            year_id: The FinancialYear to report on. Defaults to the current
+                financial year when omitted.
+
+        Raises:
+            werkzeug.exceptions.NotFound: If year_id does not exist.
+        """
+        if year_id is None:
+            fy = FinancialYear.get_or_create_current()
+        else:
+            fy = FinancialYear.query.get_or_404(year_id)
+
+        settings = BusinessSettings.get()
 
         expenses = (
             Expense.query
@@ -52,8 +67,12 @@ class TaxReportService:
 
         return {
             "financial_year": fy.label,
-            "gst_registered": fy.gst_registration_date is not None,
-            "gst_registration_date": fy.gst_registration_date,
+            "financial_year_id": fy.id,
+            # GST registration is business-wide, but a year that ended before
+            # registration has no BAS position to report.
+            "gst_registered": fy.gst_applies_during(settings.gst_registration_date),
+            "gst_registration_date": settings.gst_registration_date,
+            "gst_status": fy.gst_status(settings.gst_registration_date),
             # Expenses
             "categories": categories,
             "total_deductions": total_deductions,

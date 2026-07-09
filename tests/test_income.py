@@ -2,6 +2,7 @@ import datetime
 from decimal import Decimal
 
 from src.extensions import db as _db
+from src.models.business_settings import BusinessSettings
 from src.models.financial_year import FinancialYear
 from src.models.vendor import Vendor
 from src.models.expense import Expense, ExpenseSource
@@ -10,15 +11,17 @@ from src.services.tax_report_service import TaxReportService
 
 
 def _current_fy(reg_date=None):
-    """Return the current financial year with an optional GST registration date.
+    """Return the current financial year, setting the business-wide GST date.
 
     Uses get_or_create_current() so it matches the FY the report service loads,
-    regardless of the machine's actual date.
+    regardless of the machine's actual date. The GST registration date is a
+    business-wide setting, not a property of the year.
     """
-    fy = FinancialYear.get_or_create_current()
-    fy.gst_registration_date = reg_date
+    settings = BusinessSettings.get_or_create()
+    settings.gst_registration_date = reg_date
     _db.session.commit()
-    return fy
+    BusinessSettings.clear_cache()
+    return FinancialYear.get_or_create_current()
 
 
 # --- Income model GST logic -------------------------------------------------

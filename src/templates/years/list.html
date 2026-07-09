@@ -7,34 +7,33 @@
     <span class="sub">Australian FY runs 1 Jul – 30 Jun</span>
 </div>
 
-{% for fy in years %}
-<div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 24px;">
-        <div>
-            <div style="font-size: 18px; font-weight: 600; color: var(--green); margin-bottom: 8px;">{{ fy.label }}</div>
-            <div class="text-dim" style="font-size: 13px;">
-                {{ fy.start_date.strftime('%d %b %Y') }} — {{ fy.end_date.strftime('%d %b %Y') }}
-            </div>
-            <div style="margin-top: 12px; font-size: 13px;">
-                {% if fy.gst_registration_date %}
-                    <span class="badge badge-green">GST registered from {{ fy.gst_registration_date.strftime('%d %b %Y') }}</span>
-                {% else %}
-                    <span class="badge badge-dim">Not GST registered</span>
-                {% endif %}
-            </div>
+<!-- Business-wide GST registration. Set once; applies to every year. -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="text-dim" style="font-size: 11px; margin-bottom: 16px;">GST REGISTRATION</div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 260px;">
+            {% if business.is_registered %}
+                <span class="badge badge-green">
+                    Registered from {{ business.gst_registration_date.strftime('%d %b %Y') }}
+                </span>
+            {% else %}
+                <span class="badge badge-dim">Not GST registered</span>
+            {% endif %}
+            <p class="text-muted" style="font-size: 12px; margin-top: 10px;">
+                You register for GST once, not every year. Income and expenses dated on or after
+                this date are treated as GST-bearing; anything before it is GST-free.
+            </p>
         </div>
         <div style="min-width: 280px;">
-            <form method="POST" action="{{ url_for('years.set_gst_date', year_id=fy.id) }}">
-                <label for="gst_date_{{ fy.id }}">GST Registration Date</label>
+            <form method="POST" action="{{ url_for('years.set_gst_date') }}">
+                <label for="gst_date">GST Registration Date</label>
                 <input type="date"
-                       id="gst_date_{{ fy.id }}"
+                       id="gst_date"
                        name="gst_registration_date"
-                       value="{{ fy.gst_registration_date.isoformat() if fy.gst_registration_date else '' }}"
-                       min="{{ fy.start_date.isoformat() }}"
-                       max="{{ fy.end_date.isoformat() }}">
+                       value="{{ business.gst_registration_date.isoformat() if business.gst_registration_date else '' }}">
                 <div class="form-actions" style="margin-top: 12px;">
                     <button type="submit" class="btn btn-sm">Save</button>
-                    {% if fy.gst_registration_date %}
+                    {% if business.is_registered %}
                     <button type="submit" name="gst_registration_date" value="" class="btn btn-sm btn-muted">Clear</button>
                     {% endif %}
                 </div>
@@ -42,6 +41,38 @@
         </div>
     </div>
 </div>
+
+{% for fy in years %}
+<a href="{{ url_for('reports.report', year=fy.id) }}" class="card card-link">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 24px;">
+        <div>
+            <div style="font-size: 18px; font-weight: 600; color: var(--green); margin-bottom: 8px;">
+                {{ fy.label }}
+                {% if fy.is_current() %}
+                <span class="badge badge-dim" style="margin-left: 8px;">Current</span>
+                {% endif %}
+            </div>
+            <div class="text-dim" style="font-size: 13px;">
+                {{ fy.start_date.strftime('%d %b %Y') }} — {{ fy.end_date.strftime('%d %b %Y') }}
+            </div>
+            <div class="text-dim" style="font-size: 13px; margin-top: 4px;">
+                {{ counts[fy.id].expenses }} expense{{ '' if counts[fy.id].expenses == 1 else 's' }}
+                ·
+                {{ counts[fy.id].income }} income record{{ '' if counts[fy.id].income == 1 else 's' }}
+            </div>
+            <div style="margin-top: 12px; font-size: 13px;">
+                {% if fy.gst_applies_during(business.gst_registration_date) %}
+                    <span class="badge badge-green">{{ fy.gst_status(business.gst_registration_date) }}</span>
+                {% else %}
+                    <span class="badge badge-dim">{{ fy.gst_status(business.gst_registration_date) }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="text-dim" style="font-size: 13px; white-space: nowrap;">
+            View tax summary →
+        </div>
+    </div>
+</a>
 {% endfor %}
 
 {% if not years %}

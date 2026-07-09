@@ -4,11 +4,12 @@ from ..extensions import db
 
 
 class FinancialYear(db.Model):
-    """An Australian financial year (1 Jul – 30 Jun) and its GST config.
+    """An Australian financial year (1 Jul – 30 Jun).
 
-    All expense records are scoped to a FinancialYear. The gst_registration_date
-    field is the dividing line between pre-GST (full deduction) and post-GST
-    (GST split as Input Tax Credit) treatment for that year's expenses.
+    All expense and income records are scoped to a FinancialYear. Note that the
+    GST registration date does NOT live here — it is a one-time property of the
+    business and is stored on BusinessSettings. See gst_status() for how a
+    single registration date is interpreted against a given year.
     """
 
     __tablename__ = "financial_years"
@@ -17,15 +18,40 @@ class FinancialYear(db.Model):
     label = db.Column(db.String(20), unique=True, nullable=False)  # e.g. "FY 2025-26"
     start_date = db.Column(db.Date, nullable=False)                # 1 Jul YYYY
     end_date = db.Column(db.Date, nullable=False)                  # 30 Jun YYYY+1
-    gst_registration_date = db.Column(db.Date, nullable=True)      # None = not yet registered
 
     expenses = db.relationship("Expense", backref="financial_year", lazy=True)
 
-    def is_gst_registered_on(self, date: datetime.date) -> bool:
-        """Return True if GST was active on the given date."""
-        if not self.gst_registration_date:
+    def contains(self, date: datetime.date) -> bool:
+        """Return True if the given date falls inside this financial year."""
+        return self.start_date <= date <= self.end_date
+
+    def is_current(self) -> bool:
+        """Return True if today falls inside this financial year."""
+        return self.contains(datetime.date.today())
+
+    def gst_applies_during(self, registration_date: Optional[datetime.date]) -> bool:
+        """Return True if the business was GST registered at any point in this year.
+
+        False for years that ended before the business ever registered — those
+        years have no BAS position at all.
+        """
+        if registration_date is None:
             return False
-        return date >= self.gst_registration_date
+        return registration_date <= self.end_date
+
+    def gst_status(self, registration_date: Optional[datetime.date]) -> str:
+        """Describe this year's GST position given the business registration date.
+
+        A single registration date lands a year in one of three states:
+          * registered before the year began  → registered for the whole year
+          * registered part-way through it    → registered from that date on
+          * registered after it ended, or not at all → not registered
+        """
+        if registration_date is None or registration_date > self.end_date:
+            return "Not GST registered"
+        if registration_date <= self.start_date:
+            return "GST registered (whole year)"
+        return f"GST registered from {registration_date.strftime('%d %b %Y')}"
 
     @classmethod
     def for_date(cls, date: datetime.date) -> "FinancialYear":
