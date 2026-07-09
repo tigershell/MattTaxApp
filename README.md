@@ -19,6 +19,13 @@ Upload PDF tax invoices → Claude API extracts the data automatically → expen
 - **Flask-Login** — single-user session auth
 - **Railway** — deployment target
 
+## Running the App
+
+Double-click **`Run Taxidermatt.bat`** in the project folder. It starts the server and opens
+http://127.0.0.1:5000 in your browser. Close the black window to stop the app.
+
+Once the venv exists (see Local Development below), that's all you need day to day.
+
 ## Local Development
 
 ```bash
