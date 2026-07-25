@@ -237,7 +237,8 @@ def confirm():
             flash("Please select a vendor.", "error")
             return redirect(url_for("upload.upload"))
         vendor = Vendor.query.get_or_404(vendor_id)
-    fy = FinancialYear.get_or_create_current()
+    # File under the FY the invoice belongs to, not the FY we happen to be in today
+    fy = FinancialYear.get_or_create_for_date(invoice_date)
 
     # Convert currency to AUD
     manual_rate_str = request.form.get("manual_rate", "").strip()

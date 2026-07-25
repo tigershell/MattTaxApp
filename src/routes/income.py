@@ -73,7 +73,9 @@ def new():
             flash(f"Invalid form data: {e}", "error")
             return render_template("income/new.html", today=today, fy=fy, sources=IncomeSource)
 
-        record = Income(financial_year_id=fy.id, **data)
+        # File under the FY the money was received in, not the FY we're in today
+        income_fy = FinancialYear.get_or_create_for_date(data["received_date"])
+        record = Income(financial_year_id=income_fy.id, **data)
         db.session.add(record)
         db.session.commit()
 
@@ -98,6 +100,8 @@ def edit(income_id: int):
 
         for field, value in data.items():
             setattr(record, field, value)
+        # If the received date moved, re-file the record under the right FY
+        record.financial_year_id = FinancialYear.get_or_create_for_date(record.received_date).id
         db.session.commit()
 
         flash("Income updated.")

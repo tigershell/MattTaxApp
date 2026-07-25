@@ -79,6 +79,8 @@ def edit(expense_id: int):
                 ato_categories=ATO_CATEGORIES,
             )
 
+        # If the invoice date moved, re-file the expense under the right FY
+        expense.financial_year_id = FinancialYear.get_or_create_for_date(expense.invoice_date).id
         db.session.commit()
         flash("Expense updated.")
         return redirect(url_for("expenses.detail", expense_id=expense.id))
@@ -138,7 +140,8 @@ def new():
             flash(f"Invalid form data: {e}", "error")
             return render_template("expenses/new.html", vendors=vendors, ato_categories=ATO_CATEGORIES, today=today)
 
-        fy = FinancialYear.get_or_create_current()
+        # File under the FY the invoice belongs to, not the FY we happen to be in today
+        fy = FinancialYear.get_or_create_for_date(invoice_date)
         manual_rate_str = request.form.get("manual_rate", "").strip()
         amount_aud = amount_original
         rba_rate = None

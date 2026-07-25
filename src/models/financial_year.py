@@ -71,21 +71,30 @@ class FinancialYear(db.Model):
         return cls(label=label, start_date=start, end_date=end)
 
     @classmethod
-    def get_or_create_current(cls) -> "FinancialYear":
-        """Return the FinancialYear for today, creating it in the DB if needed."""
-        today = datetime.date.today()
-        if today.month >= 7:
-            fy_start_year = today.year
+    def get_or_create_for_date(cls, date: datetime.date) -> "FinancialYear":
+        """Return the FinancialYear containing `date`, creating it in the DB if needed.
+
+        Records must be filed by their own date (invoice date, income received
+        date) — never by today's date, or anything entered after 30 Jun lands
+        in the wrong tax year.
+        """
+        if date.month >= 7:
+            fy_start_year = date.year
         else:
-            fy_start_year = today.year - 1
+            fy_start_year = date.year - 1
 
         label = f"FY {fy_start_year}-{str(fy_start_year + 1)[-2:]}"
         fy = cls.query.filter_by(label=label).first()
         if not fy:
-            fy = cls.for_date(today)
+            fy = cls.for_date(date)
             db.session.add(fy)
             db.session.commit()
         return fy
+
+    @classmethod
+    def get_or_create_current(cls) -> "FinancialYear":
+        """Return the FinancialYear for today, creating it in the DB if needed."""
+        return cls.get_or_create_for_date(datetime.date.today())
 
     def __repr__(self) -> str:
         return f"<FinancialYear {self.label}>"
