@@ -103,7 +103,7 @@ Searchable fields per page:
 
 ## Financial Year Scoping
 
-All expenses belong to a `FinancialYear` (1 Jul – 30 Jun). The current year is created automatically on first access via `FinancialYear.get_or_create_current()`.
+All expenses belong to a `FinancialYear` (1 Jul – 30 Jun). Records are filed under the year containing **their own date** — invoice date for expenses/uploads, received date for income — via `FinancialYear.get_or_create_for_date()`, never today's date. Editing a record's date re-files it under the matching year. List views and the dashboard default to the current year via `get_or_create_current()`.
 
 Financial years are read-only records — label and dates only. Each card on the Financial Years page links to `/report?year=<id>`, which is how past years' tax summaries are viewed.
 
@@ -187,7 +187,6 @@ Only SQLite is supported; a hosted Postgres DB would use the provider's managed 
 ## Known Limitations / Future Work
 
 - **Revenue tracking:** manual income entry is now in (`Income` model + entry pages, wired into the tax report). Automated revenue sync — Stripe, App Store Connect, Google Play — is still not wired in. Design decision: wait until revenue is actually flowing before connecting these APIs, so the integration matches the real data format.
-- **Income financial-year assignment:** new income is assigned to the *current* FY (like expenses), not the FY of its `received_date`. Fine for current use; revisit if back-dating income across financial years becomes common.
 - **Bulk upload still confirms one invoice at a time:** by design (review each extraction), but duplicates no longer halt the batch. A USD invoice whose exchange-rate lookup fails will still stop the batch.
 - **Railway API sync:** Billing queries are undocumented — schema discovery via GraphiQL is required before this can be built (M3).
 - **PDF temp file cleanup:** Abandoned mid-queue uploads leave orphaned temp files. Acceptable for now; could add a cleanup task later.
